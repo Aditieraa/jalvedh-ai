@@ -571,14 +571,25 @@ window.JalVedhMockData = {
         const data = this.getFilteredDetections();
         const activeMission = this.mockMissions.find(m => m.id === this.activeMissionId) || this.mockMissions[0];
         const printWin = window.open('', '_blank');
+        
+        let canvasDataUrl = '';
+        try {
+            const canvas = document.getElementById('sonar-waterfall-canvas');
+            if (canvas) {
+                canvasDataUrl = canvas.toDataURL('image/png');
+            }
+        } catch (e) {
+            console.error("Could not grab canvas image for report:", e);
+        }
+
         let html = `
         <!DOCTYPE html>
         <html>
         <head>
             <title>JalVedh AI - Executive Hazard Intelligence Report (${activeMission.id})</title>
             <style>
-                @page { size: A4 portrait; margin: 20mm; }
-                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 24px; color: #0b2545; line-height: 1.5; }
+                @page { size: A4 portrait; margin: 0; }
+                body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20mm 20mm; color: #0b2545; line-height: 1.5; }
                 .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #12b4c4; padding-bottom: 14px; margin-bottom: 20px; }
                 .brand { font-size: 1.8rem; font-weight: 800; color: #0b2545; }
                 .brand span { color: #12b4c4; }
@@ -615,7 +626,9 @@ window.JalVedhMockData = {
                 Automated side-scan sonar ping analysis for <strong>${activeMission.name} (${activeMission.id})</strong> identified ${data.length} localized benthic anomalies. Dual-frequency acoustic normalization (SONAR-DAPT) combined with SHARP shadow geometry modeling confirmed synthetic ghost net fouling over coral habitats with a maximum Hazard Severity Score of 95/100 (CRITICAL).
             </div>
 
-            <h3>Mission Target Manifest & Risk Telemetry Table</h3>
+            ${canvasDataUrl ? '<div style="margin-bottom:24px;text-align:center;"><h3 style="text-align:left;color:#0b2545;font-size:1.1rem;margin-bottom:10px;">Analyzed Sonar Image Snapshot</h3><img src="' + canvasDataUrl + '" style="max-width:100%;max-height:350px;border:2px solid #12b4c4;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);" /></div>' : ''}
+
+            <h3 style="color:#0b2545;font-size:1.1rem;margin-bottom:10px;">Mission Target Manifest & Risk Telemetry Table</h3>
             <table>
                 <thead>
                     <tr>
@@ -625,6 +638,7 @@ window.JalVedhMockData = {
                         <th>MARLIN SURE (%)</th>
                         <th>Hazard Severity Score</th>
                         <th>Geographic Coordinates</th>
+                        <th>Acoustic Shadow</th>
                         <th>Position Uncertainty</th>
                         <th>Verdict</th>
                     </tr>
@@ -632,6 +646,7 @@ window.JalVedhMockData = {
                 <tbody>`;
         data.forEach(d => {
             const critStyle = d.hazardScore >= 85 ? 'class="badge-crit"' : 'class="badge-high"';
+            const shadowStatus = (d.estimatedRelief || "Detected");
             html += `
                 <tr>
                     <td><strong>${d.id}</strong></td>
@@ -640,6 +655,7 @@ window.JalVedhMockData = {
                     <td>${d.SURE}%</td>
                     <td ${critStyle}>${d.hazardScore}/100 (${d.hazardTier})</td>
                     <td>${d.lat}° N, ${d.lng}° E</td>
+                    <td>Detected</td>
                     <td>${d.uncertaintyRadius}</td>
                     <td><strong>${d.verdict}</strong></td>
                 </tr>`;
@@ -656,7 +672,7 @@ window.JalVedhMockData = {
         printWin.document.write(html);
         printWin.document.close();
         printWin.focus();
-        setTimeout(() => printWin.print(), 500);
+        setTimeout(() => printWin.print(), 800); // Slight delay for image to load
         if (window.showToast) window.showToast(`Publication-Ready PDF Report generated for ${activeMission.id}`, "success");
     },
 

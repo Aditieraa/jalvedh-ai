@@ -884,7 +884,7 @@ function createAppHTMLStructure() {
                 </div>
 
                 <!-- Card 4: Detections List (Flex:1, own scroll) -->
-                <div class="sonar-rail-card" style="flex:1;display:flex;flex-direction:column;min-height:180px;">
+                <div class="sonar-rail-card" style="display:none; flex:1; flex-direction:column; min-height:180px;">
                     <div class="sonar-rail-card-title" style="margin-bottom:8px;">
                         <span style="display:inline-flex;align-items:center;gap:6px;">${APP_ICONS.target} Ingested Detections</span>
                         <div style="display:flex;gap:4px;">
@@ -2615,6 +2615,9 @@ function renderMapMarkers() {
                 <div>Verdict Status: <strong>${d.verdict}</strong></div>
             </div>
             ${verdictButtonsHtml}
+            <div style="margin-top:10px;">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}" target="_blank" style="display:inline-block;width:100%;text-align:center;padding:6px 0;background:#4285F4;color:#fff;text-decoration:none;border-radius:6px;font-size:0.85rem;font-weight:bold;box-sizing:border-box;transition:background 0.2s;" onmouseover="this.style.background='#3367d6'" onmouseout="this.style.background='#4285F4'">Get Direction 🗺️</a>
+            </div>
         </div>
         `;
 
@@ -4584,10 +4587,16 @@ async function analyzeWithYOLO(file, fileName, sizeMB) {
             const baseLat = activeMission.lat || 15.4298;
             const baseLng = activeMission.lng || 73.7682;
             
+            // Clear any pre-existing dummy mock data so the minimap only shows the actual YOLO detections from this image
+            window.JalVedhMockData.mockDetections = [];
+            
             data.detections.forEach((det, idx) => {
                 const newId = `DET-2026-${String(window.JalVedhMockData.mockDetections.length + 1).padStart(3, '0')}`;
                 const offsetLat = (Math.random() - 0.5) * 0.01;
                 const offsetLng = (Math.random() - 0.5) * 0.01;
+                
+                const finalLat = (det.real_lat !== undefined && det.real_lat !== null) ? det.real_lat : baseLat + offsetLat;
+                const finalLng = (det.real_lon !== undefined && det.real_lon !== null) ? det.real_lon : baseLng + offsetLng;
                 
                 const newDetection = {
                     id: newId,
@@ -4597,8 +4606,8 @@ async function analyzeWithYOLO(file, fileName, sizeMB) {
                     SURE: det.SURE,
                     hazardScore: det.hazardScore,
                     hazardTier: det.hazardTier,
-                    lat: parseFloat((baseLat + offsetLat).toFixed(4)),
-                    lng: parseFloat((baseLng + offsetLng).toFixed(4)),
+                    lat: parseFloat(finalLat.toFixed(4)),
+                    lng: parseFloat(finalLng.toFixed(4)),
                     boundingDimensions: det.boundingDimensions,
                     uncertaintyRadius: "± 10.0 m",
                     pingId: `PNG-${Math.floor(8000 + Math.random() * 1000)}`,
@@ -5640,7 +5649,7 @@ function renderSonarWaterfallCanvas() {
             ctx.beginPath(); ctx.moveTo(posX, posY + boxH - clen); ctx.lineTo(posX, posY + boxH); ctx.lineTo(posX + clen, posY + boxH); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(posX + boxW - clen, posY + boxH); ctx.lineTo(posX + boxW, posY + boxH); ctx.lineTo(posX + boxW, posY + boxH - clen); ctx.stroke();
 
-            const tagText = `${d.class} · [${(d.lat || 0).toFixed(4)}, ${(d.lng || 0).toFixed(4)}] · Conf: ${d.confidence}%`;
+            const tagText = `${(d.class || '').toUpperCase()} | Confidence: ${d.confidence}% | Lat: ${(d.lat || 0).toFixed(4)}° | Lon: ${(d.lng || 0).toFixed(4)}° | Acoustic Shadow: Detected`;
             drawTagLabel(ctx, tagText, posX, posY - 22, strokeColor, '#ffffff');
 
         } else if (activeOverlayMode === 'masks') {
@@ -6192,7 +6201,12 @@ function initRailMinimap() {
                 fillColor: color,
                 fillOpacity: 0.9,
                 weight: isSelected ? 3 : 1.5
-            }).addTo(railMinimapMarkerGroup);
+            }).bindPopup(`
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;padding:4px;text-align:center;">
+                    <strong style="color:#0b2545;font-size:0.9rem;display:block;margin-bottom:8px;">${d.class}</strong>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}" target="_blank" style="display:inline-block;width:100%;text-align:center;padding:6px 10px;background:#4285F4;color:#fff;text-decoration:none;border-radius:6px;font-size:0.8rem;font-weight:bold;box-sizing:border-box;transition:background 0.2s;" onmouseover="this.style.background='#3367d6'" onmouseout="this.style.background='#4285F4'">Get Direction 🗺️</a>
+                </div>
+            `).addTo(railMinimapMarkerGroup);
         });
     }
 }
