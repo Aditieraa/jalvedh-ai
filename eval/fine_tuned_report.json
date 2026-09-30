@@ -1,0 +1,20 @@
+{
+  "model": "marine_debris_yolov8.pt",
+  "split": "test",
+  "images": 1340,
+  "epochs": 5,
+  "batch_size": 32,
+  "imgsz": 416,
+  "precision": 0.7985792888039226,
+  "recall": 0.2791683190510882,
+  "mAP50": 0.36423804041657576,
+  "mAP50_95": 0.21145657574017307,
+  "per_class_mAP50": {
+    "pipeline": 0.5214245725765321,
+    "shipwreck": 0.04483487224171621,
+    "mine_cylinder": 0.047669712553096696,
+    "ghost_net": 0.4180325445402485,
+    "crab_pot": 0.025321176789271697
+  },
+  "note": "Domain fine-tuned YOLOv8 on single-channel side-scan sonar with acoustic augmentations"
+}

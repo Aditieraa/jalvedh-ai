@@ -73,8 +73,35 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
 .app-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-shrink: 0;
+}
+
+.header-sidebar-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(18, 180, 196, 0.08);
+    border: 1px solid rgba(18, 180, 196, 0.25);
+    color: #0b2545;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 2px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-sidebar-toggle-btn:hover {
+    background: #12b4c4;
+    color: #ffffff;
+    border-color: #12b4c4;
+    box-shadow: 0 0 8px rgba(18, 180, 196, 0.35);
+}
+
+.header-sidebar-toggle-btn:active {
+    transform: scale(0.95);
 }
 
 .app-logo-img {
@@ -171,7 +198,10 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     gap: 8px;
     overflow-y: auto;
     overflow-x: hidden;
-    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1), padding 0.28s ease, opacity 0.22s ease;
+    transition: width 0.32s cubic-bezier(0.4, 0, 0.2, 1), 
+                min-width 0.32s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: width, min-width;
     scrollbar-color: #e1f3f6 transparent !important;
     scrollbar-width: thin !important;
     flex-shrink: 0;
@@ -185,6 +215,7 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     margin-bottom: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     min-height: 36px;
+    transition: justify-content 0.32s ease, padding 0.32s ease;
 }
 
 .sidebar-nav-title {
@@ -194,6 +225,15 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     text-transform: uppercase;
     letter-spacing: 1.2px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 160px;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                max-width 0.32s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-top-bar .sidebar-toggle-btn {
@@ -208,8 +248,12 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
     flex-shrink: 0;
+}
+
+.sidebar-top-bar .sidebar-toggle-btn svg {
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-top-bar .sidebar-toggle-btn:hover {
@@ -217,7 +261,6 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     color: #ffffff;
     border-color: #12b4c4;
     box-shadow: 0 0 10px rgba(18, 180, 196, 0.35);
-    transform: translateY(-1px);
 }
 
 .app-sidebar.sidebar-collapsed {
@@ -225,8 +268,6 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     min-width: 68px !important;
     padding: 16px 8px !important;
     overflow-x: hidden !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
 }
 
 .app-sidebar.sidebar-collapsed .sidebar-top-bar {
@@ -234,15 +275,39 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     padding-bottom: 10px !important;
 }
 
-.app-sidebar.sidebar-collapsed .sidebar-nav-title,
-.app-sidebar.sidebar-collapsed .nav-section-label,
+.app-sidebar.sidebar-collapsed .sidebar-toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+.app-sidebar.sidebar-collapsed .sidebar-nav-title {
+    opacity: 0 !important;
+    max-width: 0 !important;
+    transform: translateX(-10px) !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+}
+
+.app-sidebar.sidebar-collapsed .nav-section-label {
+    opacity: 0 !important;
+    max-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
 .app-sidebar.sidebar-collapsed .tab-label {
-    display: none !important;
+    opacity: 0 !important;
+    max-width: 0 !important;
+    transform: translateX(-10px) !important;
+    pointer-events: none !important;
+    margin: 0 !important;
 }
 
 .app-sidebar.sidebar-collapsed .sidebar-tab {
     justify-content: center !important;
-    padding: 10px 0 !important;
+    padding: 11px 0 !important;
     gap: 0 !important;
 }
 
@@ -251,29 +316,43 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
     font-size: 1.15rem;
 }
 
-.app-sidebar::-webkit-scrollbar {
-    display: block !important;
-    width: 6px !important;
-    height: 6px !important;
-}
-.app-sidebar::-webkit-scrollbar-track {
-    background: transparent !important;
-}
-.app-sidebar::-webkit-scrollbar-thumb {
-    background: #e1f3f6 !important;
-    border-radius: 10px !important;
-}
-.app-sidebar::-webkit-scrollbar-thumb:hover {
-    background: #ffffff !important;
+.tab-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 180px;
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), 
+                max-width 0.32s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-section-label {
+    display: block;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.2px;
     color: #79d2de;
-    padding: 14px 12px 6px;
+    padding: 12px 12px 6px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+    line-height: 1.4;
+    white-space: nowrap;
+    opacity: 1;
+    overflow: visible;
+    transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), 
+                max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding 0.32s cubic-bezier(0.4, 0, 0.2, 1), 
+                margin 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#section-label-core {
+    margin-top: 8px;
+    display: block;
+    visibility: visible;
 }
 
 .sidebar-tab {
@@ -953,17 +1032,20 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
 
 /* Mobile Sidebar Drawer Backdrop */
 .mobile-sidebar-backdrop {
-    display: none;
     position: fixed;
     inset: 0;
-    background: rgba(11, 37, 69, 0.45);
+    background: rgba(11, 37, 69, 0.55);
     backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     z-index: 998;
-    transition: opacity 0.25s ease;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobile-sidebar-backdrop.active {
-    display: block;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 /* Universal Sidebar Hamburger Toggle Button */
@@ -1024,18 +1106,21 @@ html.jalvedh-authenticated .jalvedh-app-overlay {
         bottom: 0;
         width: 270px;
         min-width: 270px;
+        max-width: 270px;
         z-index: 999;
-        transform: translateX(-100%);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        box-shadow: 6px 0 24px rgba(0, 0, 0, 0.25);
+        transform: translate3d(-100%, 0, 0);
+        transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.35s ease;
+        box-shadow: none;
     }
     .app-sidebar.mobile-open {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
+        box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
     }
     .app-sidebar.sidebar-collapsed {
-        transform: translateX(-100%) !important;
+        transform: translate3d(-100%, 0, 0) !important;
         width: 270px !important;
         min-width: 270px !important;
+        max-width: 270px !important;
     }
     .app-main-viewport {
         padding: 10px 12px;

@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-09-30 23:53:42",
+  "dataset": "production_balanced_v1",
+  "training_epochs": 8,
+  "elapsed_seconds": 17518.35,
+  "overall": {
+    "precision": 54.83,
+    "recall": 38.83,
+    "mAP50": 45.94,
+    "mAP50_95": 25.96
+  },
+  "classes": {
+    "0_pipeline": {
+      "description": "Subsea pipelines and pipe-like linear structures",
+      "mAP50": 25.96
+    },
+    "1_shipwreck": {
+      "description": "Shipwrecks and wreck-like hull structures",
+      "mAP50": 23.83
+    },
+    "2_mine_cylinder": {
+      "description": "Mine-like, cylindrical and compact artificial objects",
+      "mAP50": 8.79
+    },
+    "3_ghost_net": {
+      "description": "Synthetic abandoned or entangled fishing-net structures",
+      "mAP50": 64.41
+    },
+    "4_crab_pot": {
+      "description": "Crab pots and rigid derelict fishing gear",
+      "mAP50": 6.79
+    }
+  }
+}

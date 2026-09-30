@@ -1,0 +1,16 @@
+{
+  "model_format": "ONNX (FP32 Slimmed)",
+  "file_size_mb": 11.61,
+  "input_resolution": "416x416",
+  "device": "CPU (8 threads)",
+  "num_runs": 50,
+  "latency_ms": {
+    "mean": 29.03,
+    "p95": 34.57,
+    "min": 25.4,
+    "max": 57.22
+  },
+  "throughput_tiles_per_sec": 34.45,
+  "realtime_survey_capable": true,
+  "parity_verified": true
+}

@@ -59,7 +59,7 @@ window.JalVedhMockData = {
 
     filterState: {
         minConfidence: 50,
-        selectedClasses: ["Ghost Net", "Shipwreck", "Pipe", "Cylinder", "Entangled Debris Net"],
+        selectedClasses: [], // Empty means all target classes are enabled
         hideNatural: false
     },
 
@@ -72,31 +72,851 @@ window.JalVedhMockData = {
     ],
 
     mockDetections: [
-        // MSN-SWQM-2026-GOA (Goa Coastal Shelf: 15.4298° N, 73.6800° E - Sea Water Quality Monitoring SWQM Towfish)
-        { id: "DET-2026-001", missionId: "MSN-SWQM-2026-GOA", class: "Ghost Net", confidence: 96, SURE: 94, hazardScore: 95, hazardTier: "CRITICAL", lat: 15.4298, lng: 73.6800, boundingDimensions: "14.2 × 8.6 m", xM: -25.0, yM: 12.0, wM: 14.2, hM: 8.6, kind: "net", uncertaintyRadius: "± 10.5 m", pingId: "PING-8821", timestamp: "2026-09-28 08:14:22", verdict: "Pending", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Acoustic shadow geometry indicates a heavy synthetic gillnet cluster entangled over rocky seabed.", recommendedAction: "Deploy retrieval boat and clearance diver team. Priority 1 environmental hazard." },
-        { id: "DET-2026-002", missionId: "MSN-SWQM-2026-GOA", class: "Ghost Net", confidence: 91, SURE: 89, hazardScore: 88, hazardTier: "CRITICAL", lat: 15.4345, lng: 73.6830, boundingDimensions: "18.5 × 11.2 m", xM: 18.0, yM: 45.0, wM: 18.5, hM: 11.2, kind: "net", uncertaintyRadius: "± 12.0 m", pingId: "PING-8824", timestamp: "2026-09-28 08:16:05", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "High-density trawl webbing detected with floats attached along top line.", recommendedAction: "Schedule salvage dive team for removal." },
-        { id: "DET-2026-003", missionId: "MSN-SWQM-2026-GOA", class: "Shipwreck", confidence: 98, SURE: 97, hazardScore: 92, hazardTier: "CRITICAL", lat: 15.4120, lng: 73.6660, boundingDimensions: "38.6 × 14.8 m", xM: 22.0, yM: 26.0, wM: 38.6, hM: 14.8, kind: "wreck", uncertaintyRadius: "± 8.2 m", pingId: "PING-8830", timestamp: "2026-09-28 08:22:18", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Intact metallic hull structure producing strong specular backscatter highlights and continuous shadow.", recommendedAction: "Mark on navigation charts as a submerged navigation hazard." },
-        { id: "DET-2026-004", missionId: "MSN-SWQM-2026-GOA", class: "Pipe", confidence: 88, SURE: 85, hazardScore: 68, hazardTier: "MEDIUM", lat: 15.4215, lng: 73.6750, boundingDimensions: "6.4 × 1.2 m", xM: -32.0, yM: 62.0, wM: 6.4, hM: 1.2, kind: "pipe", uncertaintyRadius: "± 14.5 m", pingId: "PING-8835", timestamp: "2026-09-28 08:27:40", verdict: "Pending", georeferenceStatus: "Ping Header GNSS", aiInterpretation: "Linear cylindrical backscatter signature consistent with exposed seabed pipeline section.", recommendedAction: "Notify coastal infrastructure engineering team." },
-        { id: "DET-2026-005", missionId: "MSN-SWQM-2026-GOA", class: "Cylinder", confidence: 85, SURE: 82, hazardScore: 62, hazardTier: "MEDIUM", lat: 15.4390, lng: 73.6920, boundingDimensions: "3.1 × 1.0 m", xM: 14.0, yM: 70.0, wM: 3.1, hM: 1.0, kind: "cylinder", uncertaintyRadius: "± 16.0 m", pingId: "PING-8840", timestamp: "2026-09-28 08:31:12", verdict: "Pending", georeferenceStatus: "Ping Header GNSS", aiInterpretation: "Submerged cylindrical container detected lying partially buried in sand.", recommendedAction: "Inspect during next Towfish pass for hazardous material markings." },
-        { id: "DET-2026-006", missionId: "MSN-SWQM-2026-GOA", class: "Pipe", confidence: 79, SURE: 76, hazardScore: 58, hazardTier: "MEDIUM", lat: 15.4085, lng: 73.6610, boundingDimensions: "5.5 × 1.1 m", xM: -18.0, yM: 38.0, wM: 5.5, hM: 1.1, kind: "pipe", uncertaintyRadius: "± 18.5 m", pingId: "PING-8845", timestamp: "2026-09-28 08:35:55", verdict: "Rejected", georeferenceStatus: "Nav File Synced", aiInterpretation: "Partially buried linear pipe signature requiring a secondary side-scan review.", recommendedAction: "Low priority survey-line review." },
-        { id: "DET-2026-007", missionId: "MSN-SWQM-2026-GOA", class: "Cylinder", confidence: 74, SURE: 92, hazardScore: 25, hazardTier: "LOW", lat: 15.4260, lng: 73.6810, boundingDimensions: "3.8 × 1.2 m", xM: -10.0, yM: 52.0, wM: 3.8, hM: 1.2, kind: "cylinder", uncertaintyRadius: "± 22.0 m", pingId: "PING-8849", timestamp: "2026-09-28 08:39:10", verdict: "Rejected", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Low-backscatter cylindrical object resolved from a seabed look-alike after review.", recommendedAction: "Retain in the analyst review set; do not dispatch." },
+        // ==================== MISSION 1: MSN-SWQM-2026-GOA (Goa Coastal Shelf - 7 Detections) ====================
+        {
+            id: "DET-2026-001",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Aircraft Wreckage",
+            confidence: 96,
+            SURE: 94,
+            hazardScore: 94,
+            hazardTier: "CRITICAL",
+            lat: 15.4298,
+            lng: 73.6800,
+            boundingDimensions: "24.5 × 28.0 m",
+            uncertaintyRadius: "± 0.4 m",
+            pingId: "PNG-8824",
+            timestamp: "2026-09-28 08:16:05",
+            verdict: "Confirmed",
+            georeferenceStatus: "GPS/INS Georeferenced (DGPS Calibrated)",
+            aiInterpretation: "Submerged commercial airframe wreckage with twin-turbofan acoustic signature, intact wing spars, and extensive fuselage shadow.",
+            recommendedAction: "High-priority naval salvage verification; coordinate diver safety zone with Mormugao Port Trust.",
+            shadowLength: "18.4 m",
+            reliefHeight: "4.8 m",
+            backscatterP95: "218 DN",
+            depth: "34 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "6.0 m",
+            surveySpeed: "4.1 kn",
+            heading: "242° (SSW)",
+            rawX: 42,
+            rawY: 55,
+            rawW: 130,
+            rawH: 150,
+            xM: -18.5,
+            yM: 28.0,
+            wM: 24.5,
+            hM: 28.0
+        },
+        {
+            id: "DET-2026-002",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Ghost Net",
+            confidence: 94,
+            SURE: 92,
+            hazardScore: 91,
+            hazardTier: "CRITICAL",
+            lat: 15.4385,
+            lng: 73.6872,
+            boundingDimensions: "18.2 × 11.5 m",
+            uncertaintyRadius: "± 0.8 m",
+            pingId: "PNG-8840",
+            timestamp: "2026-09-28 08:24:12",
+            verdict: "Confirmed",
+            georeferenceStatus: "GPS/INS Georeferenced",
+            aiInterpretation: "Dense entangled monofilament gillnet cluster draped across submerged rocky ridge with high acoustic backscatter entanglement loops.",
+            recommendedAction: "Benthic grapple retrieval dispatch; alert artisanal fishermen within 3 nautical miles.",
+            shadowLength: "8.2 m",
+            reliefHeight: "2.1 m",
+            backscatterP95: "196 DN",
+            depth: "31 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "6.2 m",
+            surveySpeed: "4.0 kn",
+            heading: "242° (SSW)",
+            rawX: 180,
+            rawY: 110,
+            rawW: 95,
+            rawH: 80,
+            xM: 14.2,
+            yM: 45.0,
+            wM: 18.2,
+            hM: 11.5
+        },
+        {
+            id: "DET-2026-003",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Pipe",
+            confidence: 91,
+            SURE: 89,
+            hazardScore: 78,
+            hazardTier: "HIGH",
+            lat: 15.4215,
+            lng: 73.6720,
+            boundingDimensions: "12.4 × 1.2 m",
+            uncertaintyRadius: "± 1.2 m",
+            pingId: "PNG-8855",
+            timestamp: "2026-09-28 08:35:40",
+            verdict: "Confirmed",
+            georeferenceStatus: "GPS/INS Georeferenced",
+            aiInterpretation: "Exposed linear metallic conduit section exhibiting specular acoustic highlights and distinct ground-range shadow relief.",
+            recommendedAction: "Cross-reference with coastal offshore pipeline registry and check for scour undermining.",
+            shadowLength: "3.5 m",
+            reliefHeight: "1.2 m",
+            backscatterP95: "230 DN",
+            depth: "36 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "5.8 m",
+            surveySpeed: "4.2 kn",
+            heading: "240° (WSW)",
+            rawX: 310,
+            rawY: 190,
+            rawW: 75,
+            rawH: 40,
+            xM: 22.0,
+            yM: 65.0,
+            wM: 12.4,
+            hM: 1.2
+        },
+        {
+            id: "DET-2026-004",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Entangled Debris Net",
+            confidence: 88,
+            SURE: 86,
+            hazardScore: 85,
+            hazardTier: "CRITICAL",
+            lat: 15.4450,
+            lng: 73.6910,
+            boundingDimensions: "14.0 × 9.0 m",
+            uncertaintyRadius: "± 1.5 m",
+            pingId: "PNG-8862",
+            timestamp: "2026-09-28 08:42:19",
+            verdict: "Pending",
+            georeferenceStatus: "GPS/INS Georeferenced",
+            aiInterpretation: "Polypropylene trawl net remnant combined with entangled maritime towline and plastic marine debris.",
+            recommendedAction: "Deploy ROV cutting arm or surface retrieval winch during next survey pass.",
+            shadowLength: "7.0 m",
+            reliefHeight: "1.9 m",
+            backscatterP95: "188 DN",
+            depth: "29 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "6.0 m",
+            surveySpeed: "4.1 kn",
+            heading: "244° (WSW)",
+            rawX: 120,
+            rawY: 260,
+            rawW: 85,
+            rawH: 70,
+            xM: -10.5,
+            yM: 88.0,
+            wM: 14.0,
+            hM: 9.0
+        },
+        {
+            id: "DET-2026-005",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Cylinder",
+            confidence: 85,
+            SURE: 84,
+            hazardScore: 68,
+            hazardTier: "MEDIUM",
+            lat: 15.4180,
+            lng: 73.6650,
+            boundingDimensions: "4.8 × 1.1 m",
+            uncertaintyRadius: "± 1.8 m",
+            pingId: "PNG-8878",
+            timestamp: "2026-09-28 08:51:02",
+            verdict: "Pending",
+            georeferenceStatus: "GPS/INS Georeferenced",
+            aiInterpretation: "Discarded cylindrical industrial container resting upright in fine sand, potential pressurized canister.",
+            recommendedAction: "Magnetometer re-sweep on next run to verify ferrous content and wall thickness.",
+            shadowLength: "2.2 m",
+            reliefHeight: "1.1 m",
+            backscatterP95: "212 DN",
+            depth: "38 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "6.1 m",
+            surveySpeed: "4.1 kn",
+            heading: "240° (WSW)",
+            rawX: 240,
+            rawY: 310,
+            rawW: 50,
+            rawH: 35,
+            xM: 16.0,
+            yM: 104.0,
+            wM: 4.8,
+            hM: 1.1
+        },
+        {
+            id: "DET-2026-006",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Shipwreck",
+            confidence: 97,
+            SURE: 95,
+            hazardScore: 96,
+            hazardTier: "CRITICAL",
+            lat: 15.4520,
+            lng: 73.7020,
+            boundingDimensions: "32.0 × 8.5 m",
+            uncertaintyRadius: "± 0.6 m",
+            pingId: "PNG-8890",
+            timestamp: "2026-09-28 09:05:44",
+            verdict: "Confirmed",
+            georeferenceStatus: "GPS/INS Georeferenced",
+            aiInterpretation: "Intact sunken motorized fishing trawler resting on port hull flank; superstructure, mast, and propeller aperture identifiable.",
+            recommendedAction: "Issue Notice to Mariners (NOTMAR) and update hydrographic fairway obstruction overlay.",
+            shadowLength: "22.5 m",
+            reliefHeight: "6.2 m",
+            backscatterP95: "242 DN",
+            depth: "26 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "6.5 m",
+            surveySpeed: "3.9 kn",
+            heading: "245° (WSW)",
+            rawX: 60,
+            rawY: 360,
+            rawW: 140,
+            rawH: 90,
+            xM: -22.0,
+            yM: 125.0,
+            wM: 32.0,
+            hM: 8.5
+        },
+        {
+            id: "DET-2026-007",
+            missionId: "MSN-SWQM-2026-GOA",
+            class: "Cylinder",
+            confidence: 82,
+            SURE: 80,
+            hazardScore: 62,
+            hazardTier: "MEDIUM",
+            lat: 15.4120,
+            lng: 73.6580,
+            boundingDimensions: "3.2 × 1.0 m",
+            uncertaintyRadius: "± 2.0 m",
+            pingId: "PNG-8902",
+            timestamp: "2026-09-28 09:18:30",
+            verdict: "Pending",
+            georeferenceStatus: "GPS/INS Georeferenced",
+            aiInterpretation: "Corroded chemical transport drum partially sunken into soft silty seafloor.",
+            recommendedAction: "Log coordinates into regional environmental contamination monitoring database.",
+            shadowLength: "1.8 m",
+            reliefHeight: "0.9 m",
+            backscatterP95: "198 DN",
+            depth: "41 m",
+            vessel: "CRV Sagar Paschimi (Towfish Rig 01)",
+            platform: "Towfish",
+            programme: "Sea Water Quality Monitoring (SWQM) — NCCR / MoES",
+            frequency: "500 kHz High-Res CHIRP",
+            altitude: "5.9 m",
+            surveySpeed: "4.2 kn",
+            heading: "241° (WSW)",
+            rawX: 290,
+            rawY: 420,
+            rawW: 45,
+            rawH: 30,
+            xM: 18.0,
+            yM: 142.0,
+            wM: 3.2,
+            hM: 1.0
+        },
 
-        // MSN-NMLAP-2026-CHN (Chennai Port Approach & Ennore Fairway: 13.1800° N, 80.4500° E - NCCR NMLAP ASV)
-        { id: "DET-2026-008", missionId: "MSN-NMLAP-2026-CHN", class: "Ghost Net", confidence: 93, SURE: 91, hazardScore: 90, hazardTier: "CRITICAL", lat: 13.1800, lng: 80.4500, boundingDimensions: "11.0 × 7.4 m", xM: -15.0, yM: 18.0, wM: 11.0, hM: 7.4, kind: "net", uncertaintyRadius: "± 11.2 m", pingId: "PING-8860", timestamp: "2026-09-28 08:50:04", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Abandoned mono-filament gillnet fouling fairway approach off Chennai coast.", recommendedAction: "Deploy recovery hook on autonomous surface vessel." },
-        { id: "DET-2026-009", missionId: "MSN-NMLAP-2026-CHN", class: "Pipe", confidence: 89, SURE: 87, hazardScore: 72, hazardTier: "HIGH", lat: 13.1845, lng: 80.4550, boundingDimensions: "8.2 × 1.4 m", xM: 20.0, yM: 35.0, wM: 8.2, hM: 1.4, kind: "pipe", uncertaintyRadius: "± 13.0 m", pingId: "PING-8864", timestamp: "2026-09-28 08:54:18", verdict: "Pending", georeferenceStatus: "Nav File Synced", aiInterpretation: "Exposed seabed communication conduit or industrial discharge pipe.", recommendedAction: "Cross-reference with bathymetric cable charts." },
-        { id: "DET-2026-010", missionId: "MSN-NMLAP-2026-CHN", class: "Shipwreck", confidence: 97, SURE: 95, hazardScore: 94, hazardTier: "CRITICAL", lat: 13.1750, lng: 80.4420, boundingDimensions: "42.0 × 16.5 m", xM: -28.0, yM: 55.0, wM: 42.0, hM: 16.5, kind: "wreck", uncertaintyRadius: "± 9.0 m", pingId: "PING-8870", timestamp: "2026-09-28 09:02:10", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Submerged steel barge hull lying upright on muddy seabed.", recommendedAction: "Issue Notice to Mariners." },
-        { id: "DET-2026-011", missionId: "MSN-NMLAP-2026-CHN", class: "Cylinder", confidence: 84, SURE: 80, hazardScore: 64, hazardTier: "MEDIUM", lat: 13.1880, lng: 80.4610, boundingDimensions: "2.8 × 1.1 m", xM: 12.0, yM: 68.0, wM: 2.8, hM: 1.1, kind: "cylinder", uncertaintyRadius: "± 15.5 m", pingId: "PING-8875", timestamp: "2026-09-28 09:12:45", verdict: "Pending", georeferenceStatus: "Ping Header GNSS", aiInterpretation: "Submerged gas cylinder or mooring buoy sinker.", recommendedAction: "Inspect during next ASV lawnmower transect." },
+        // ==================== MISSION 2: MSN-PMP-2026-NAG (Poompuhar Archaeological Survey - 4 Detections) ====================
+        {
+            id: "DET-2026-008",
+            missionId: "MSN-PMP-2026-NAG",
+            class: "Shipwreck",
+            confidence: 95,
+            SURE: 93,
+            hazardScore: 92,
+            hazardTier: "CRITICAL",
+            lat: 11.1520,
+            lng: 79.8840,
+            boundingDimensions: "42.0 × 12.0 m",
+            uncertaintyRadius: "± 0.9 m",
+            pingId: "PNG-7102",
+            timestamp: "2026-09-27 10:14:20",
+            verdict: "Confirmed",
+            georeferenceStatus: "AUV DVL-INS Georeferenced",
+            aiInterpretation: "Submerged ancient wooden hull structure buried under silt with exposed frames, keelson, and stone ballast mounds.",
+            recommendedAction: "High-resolution sub-bottom profiler survey and archaeological heritage exclusion zone demarcation.",
+            shadowLength: "26.0 m",
+            reliefHeight: "5.4 m",
+            backscatterP95: "225 DN",
+            depth: "28 m",
+            vessel: "NIOT Coastal Survey AUV-02",
+            platform: "AUV",
+            programme: "Poompuhar Archaeological Survey — NIOT / TN Archaeology",
+            frequency: "450 kHz Dual-CHIRP",
+            altitude: "4.5 m",
+            surveySpeed: "2.8 kn",
+            heading: "095° (E)",
+            rawX: 80,
+            rawY: 70,
+            rawW: 160,
+            rawH: 110,
+            xM: -16.0,
+            yM: 35.0,
+            wM: 42.0,
+            hM: 12.0
+        },
+        {
+            id: "DET-2026-009",
+            missionId: "MSN-PMP-2026-NAG",
+            class: "Cylinder",
+            confidence: 89,
+            SURE: 88,
+            hazardScore: 74,
+            hazardTier: "HIGH",
+            lat: 11.1460,
+            lng: 79.8760,
+            boundingDimensions: "6.5 × 1.8 m",
+            uncertaintyRadius: "± 1.4 m",
+            pingId: "PNG-7115",
+            timestamp: "2026-09-27 10:35:10",
+            verdict: "Confirmed",
+            georeferenceStatus: "AUV DVL-INS Georeferenced",
+            aiInterpretation: "Dressed cylindrical granite architectural column lying horizontally on seabed, probable ancient harbour structural relic.",
+            recommendedAction: "Notify Tamil Nadu State Archaeology Department for photogrammetric 3D reconstruction pass.",
+            shadowLength: "4.2 m",
+            reliefHeight: "1.8 m",
+            backscatterP95: "235 DN",
+            depth: "32 m",
+            vessel: "NIOT Coastal Survey AUV-02",
+            platform: "AUV",
+            programme: "Poompuhar Archaeological Survey — NIOT / TN Archaeology",
+            frequency: "450 kHz Dual-CHIRP",
+            altitude: "4.2 m",
+            surveySpeed: "2.9 kn",
+            heading: "095° (E)",
+            rawX: 260,
+            rawY: 150,
+            rawW: 70,
+            rawH: 45,
+            xM: 14.0,
+            yM: 58.0,
+            wM: 6.5,
+            hM: 1.8
+        },
+        {
+            id: "DET-2026-010",
+            missionId: "MSN-PMP-2026-NAG",
+            class: "Ghost Net",
+            confidence: 92,
+            SURE: 90,
+            hazardScore: 87,
+            hazardTier: "CRITICAL",
+            lat: 11.1580,
+            lng: 79.8910,
+            boundingDimensions: "15.0 × 10.0 m",
+            uncertaintyRadius: "± 1.1 m",
+            pingId: "PNG-7128",
+            timestamp: "2026-09-27 10:52:45",
+            verdict: "Pending",
+            georeferenceStatus: "AUV DVL-INS Georeferenced",
+            aiInterpretation: "Heavy commercial trawl net entangled over ancient stone foundation mound; threatens fragile heritage artifacts.",
+            recommendedAction: "Schedule specialized diver disentanglement using ultrasonic shears to prevent stone breakage.",
+            shadowLength: "7.8 m",
+            reliefHeight: "2.3 m",
+            backscatterP95: "192 DN",
+            depth: "25 m",
+            vessel: "NIOT Coastal Survey AUV-02",
+            platform: "AUV",
+            programme: "Poompuhar Archaeological Survey — NIOT / TN Archaeology",
+            frequency: "450 kHz Dual-CHIRP",
+            altitude: "4.6 m",
+            surveySpeed: "2.7 kn",
+            heading: "098° (E)",
+            rawX: 130,
+            rawY: 240,
+            rawW: 90,
+            rawH: 75,
+            xM: -8.0,
+            yM: 82.0,
+            wM: 15.0,
+            hM: 10.0
+        },
+        {
+            id: "DET-2026-011",
+            missionId: "MSN-PMP-2026-NAG",
+            class: "Pipe",
+            confidence: 86,
+            SURE: 83,
+            hazardScore: 69,
+            hazardTier: "MEDIUM",
+            lat: 11.1410,
+            lng: 79.8710,
+            boundingDimensions: "9.8 × 1.4 m",
+            uncertaintyRadius: "± 1.7 m",
+            pingId: "PNG-7140",
+            timestamp: "2026-09-27 11:15:30",
+            verdict: "Pending",
+            georeferenceStatus: "AUV DVL-INS Georeferenced",
+            aiInterpretation: "Linear terracotta and stone conduit alignment extending seaward from submerged shoreline contour.",
+            recommendedAction: "Trace alignment towards shoreline during next low-tide survey window.",
+            shadowLength: "3.1 m",
+            reliefHeight: "1.3 m",
+            backscatterP95: "210 DN",
+            depth: "35 m",
+            vessel: "NIOT Coastal Survey AUV-02",
+            platform: "AUV",
+            programme: "Poompuhar Archaeological Survey — NIOT / TN Archaeology",
+            frequency: "450 kHz Dual-CHIRP",
+            altitude: "4.4 m",
+            surveySpeed: "2.8 kn",
+            heading: "096° (E)",
+            rawX: 280,
+            rawY: 330,
+            rawW: 65,
+            rawH: 40,
+            xM: 19.0,
+            yM: 112.0,
+            wM: 9.8,
+            hM: 1.4
+        },
 
-        // MSN-PMP-2026-NAG (Nagapattinam–Poompuhar Archaeological Sector: 11.1500° N, 79.8800° E - NIOT AUV)
-        { id: "DET-2026-012", missionId: "MSN-PMP-2026-NAG", class: "Ghost Net", confidence: 95, SURE: 93, hazardScore: 89, hazardTier: "CRITICAL", lat: 11.1500, lng: 79.8800, boundingDimensions: "15.0 × 9.0 m", xM: -20.0, yM: 22.0, wM: 15.0, hM: 9.0, kind: "net", uncertaintyRadius: "± 10.8 m", pingId: "PING-8880", timestamp: "2026-09-28 09:20:00", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Derelict trawl net draped across archaeological structure zone off Poompuhar.", recommendedAction: "Archaeological clearance dive team dispatch required." },
-        { id: "DET-2026-013", missionId: "MSN-PMP-2026-NAG", class: "Cylinder", confidence: 81, SURE: 78, hazardScore: 55, hazardTier: "MEDIUM", lat: 11.1550, lng: 79.8850, boundingDimensions: "4.0 × 1.3 m", xM: 16.0, yM: 42.0, wM: 4.0, hM: 1.3, kind: "cylinder", uncertaintyRadius: "± 17.0 m", pingId: "PING-8885", timestamp: "2026-09-28 09:25:30", verdict: "Pending", georeferenceStatus: "Nav File Synced", aiInterpretation: "Cylindrical masonry / structural pillar artifact signature near ancient submerged port sector.", recommendedAction: "Secondary optical inspection pass recommended." },
-        { id: "DET-2026-014", missionId: "MSN-PMP-2026-NAG", class: "Shipwreck", confidence: 96, SURE: 94, hazardScore: 92, hazardTier: "CRITICAL", lat: 11.1420, lng: 79.8710, boundingDimensions: "28.5 × 9.5 m", xM: -30.0, yM: 58.0, wM: 28.5, hM: 9.5, kind: "wreck", uncertaintyRadius: "± 14.0 m", pingId: "PING-8890", timestamp: "2026-09-28 09:31:15", verdict: "Confirmed", georeferenceStatus: "Ping Header GNSS", aiInterpretation: "Historical wooden sailing vessel hull structure exhibiting regular rib frame backscatter.", recommendedAction: "Archive in TN Archaeology & NIOT maritime heritage repository." },
-        { id: "DET-2026-015", missionId: "MSN-PMP-2026-NAG", class: "Pipe", confidence: 72, SURE: 90, hazardScore: 20, hazardTier: "LOW", lat: 11.1580, lng: 79.8900, boundingDimensions: "10.0 × 1.0 m", xM: -8.0, yM: 48.0, wM: 10.0, hM: 1.0, kind: "pipe", uncertaintyRadius: "± 21.0 m", pingId: "PING-8895", timestamp: "2026-09-28 09:38:00", verdict: "Rejected", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Natural linear ridge rock feature classified and rejected by Nature Gate.", recommendedAction: "Retain in the audit trail; no dispatch required." },
+        // ==================== MISSION 3: MSN-NHO-2026-IKK (INS Ikshak Karwar Survey - 4 Detections) ====================
+        {
+            id: "DET-2026-012",
+            missionId: "MSN-NHO-2026-IKK",
+            class: "Shipwreck",
+            confidence: 98,
+            SURE: 96,
+            hazardScore: 95,
+            hazardTier: "CRITICAL",
+            lat: 14.8140,
+            lng: 74.0560,
+            boundingDimensions: "48.0 × 14.0 m",
+            uncertaintyRadius: "± 0.5 m",
+            pingId: "PNG-6205",
+            timestamp: "2026-09-29 07:45:12",
+            verdict: "Confirmed",
+            georeferenceStatus: "Hull-Mounted High-Precision DGPS",
+            aiInterpretation: "Sunken flat-deck navigation barge sitting upright in naval fairway approach; mast and winches pose severe depth clearance hazard.",
+            recommendedAction: "Publish immediate Naval Hydrographic Notice; assign clearance depth at chart lowest astronomical tide.",
+            shadowLength: "31.0 m",
+            reliefHeight: "7.1 m",
+            backscatterP95: "248 DN",
+            depth: "42 m",
+            vessel: "INS Ikshak (Sandhayak-Class Survey Vessel)",
+            platform: "Hull-Mounted",
+            programme: "Indian Naval Hydrographic Department (NHO) — INS Ikshak",
+            frequency: "500 kHz High-Res",
+            altitude: "12.0 m",
+            surveySpeed: "5.2 kn",
+            heading: "185° (S)",
+            rawX: 90,
+            rawY: 85,
+            rawW: 170,
+            rawH: 120,
+            xM: -14.0,
+            yM: 40.0,
+            wM: 48.0,
+            hM: 14.0
+        },
+        {
+            id: "DET-2026-013",
+            missionId: "MSN-NHO-2026-IKK",
+            class: "Cylinder",
+            confidence: 88,
+            SURE: 85,
+            hazardScore: 82,
+            hazardTier: "CRITICAL",
+            lat: 14.8050,
+            lng: 74.0420,
+            boundingDimensions: "3.5 × 0.8 m",
+            uncertaintyRadius: "± 1.0 m",
+            pingId: "PNG-6218",
+            timestamp: "2026-09-29 08:12:33",
+            verdict: "Confirmed",
+            georeferenceStatus: "Hull-Mounted High-Precision DGPS",
+            aiInterpretation: "High-density steel cylindrical canister matching legacy underwater ordnance/torpedo casing profile.",
+            recommendedAction: "Forward sonar telemetry to Naval Explosive Ordnance Disposal (EOD) unit for clearance protocol.",
+            shadowLength: "2.6 m",
+            reliefHeight: "0.8 m",
+            backscatterP95: "240 DN",
+            depth: "45 m",
+            vessel: "INS Ikshak (Sandhayak-Class Survey Vessel)",
+            platform: "Hull-Mounted",
+            programme: "Indian Naval Hydrographic Department (NHO) — INS Ikshak",
+            frequency: "500 kHz High-Res",
+            altitude: "11.8 m",
+            surveySpeed: "5.1 kn",
+            heading: "185° (S)",
+            rawX: 250,
+            rawY: 170,
+            rawW: 55,
+            rawH: 35,
+            xM: 12.0,
+            yM: 64.0,
+            wM: 3.5,
+            hM: 0.8
+        },
+        {
+            id: "DET-2026-014",
+            missionId: "MSN-NHO-2026-IKK",
+            class: "Pipe",
+            confidence: 93,
+            SURE: 91,
+            hazardScore: 79,
+            hazardTier: "HIGH",
+            lat: 14.8210,
+            lng: 74.0620,
+            boundingDimensions: "22.0 × 1.6 m",
+            uncertaintyRadius: "± 1.2 m",
+            pingId: "PNG-6230",
+            timestamp: "2026-09-29 08:34:50",
+            verdict: "Pending",
+            georeferenceStatus: "Hull-Mounted High-Precision DGPS",
+            aiInterpretation: "Subsea heavy-duty fuel bunkering transfer pipeline crossing naval vessel turning basin.",
+            recommendedAction: "Verify cathodic protection and burial depth status against naval port facility blueprint.",
+            shadowLength: "4.8 m",
+            reliefHeight: "1.5 m",
+            backscatterP95: "228 DN",
+            depth: "38 m",
+            vessel: "INS Ikshak (Sandhayak-Class Survey Vessel)",
+            platform: "Hull-Mounted",
+            programme: "Indian Naval Hydrographic Department (NHO) — INS Ikshak",
+            frequency: "500 kHz High-Res",
+            altitude: "12.2 m",
+            surveySpeed: "5.3 kn",
+            heading: "184° (S)",
+            rawX: 110,
+            rawY: 260,
+            rawW: 110,
+            rawH: 50,
+            xM: -18.0,
+            yM: 92.0,
+            wM: 22.0,
+            hM: 1.6
+        },
+        {
+            id: "DET-2026-015",
+            missionId: "MSN-NHO-2026-IKK",
+            class: "Ghost Net",
+            confidence: 90,
+            SURE: 87,
+            hazardScore: 86,
+            hazardTier: "CRITICAL",
+            lat: 14.7990,
+            lng: 74.0350,
+            boundingDimensions: "16.5 × 12.0 m",
+            uncertaintyRadius: "± 1.6 m",
+            pingId: "PNG-6244",
+            timestamp: "2026-09-29 08:58:20",
+            verdict: "Pending",
+            georeferenceStatus: "Hull-Mounted High-Precision DGPS",
+            aiInterpretation: "Submerged synthetic trawl net wrapped around pinnacle rock; severe snag hazard for naval sonar tows.",
+            recommendedAction: "Add cautionary note to ECDIS vector electronic navigation chart ENC IN2002.",
+            shadowLength: "8.9 m",
+            reliefHeight: "2.4 m",
+            backscatterP95: "195 DN",
+            depth: "49 m",
+            vessel: "INS Ikshak (Sandhayak-Class Survey Vessel)",
+            platform: "Hull-Mounted",
+            programme: "Indian Naval Hydrographic Department (NHO) — INS Ikshak",
+            frequency: "500 kHz High-Res",
+            altitude: "12.0 m",
+            surveySpeed: "5.0 kn",
+            heading: "185° (S)",
+            rawX: 270,
+            rawY: 350,
+            rawW: 90,
+            rawH: 75,
+            xM: 15.0,
+            yM: 120.0,
+            wM: 16.5,
+            hM: 12.0
+        },
 
-        // MSN-NHO-2026-IKK (Karwar Port & Konkan Continental Shelf: 14.8100° N, 74.0500° E - INS Ikshak Hull SSS)
-        { id: "DET-2026-016", missionId: "MSN-NHO-2026-IKK", class: "Ghost Net", confidence: 97, SURE: 96, hazardScore: 93, hazardTier: "CRITICAL", lat: 14.8100, lng: 74.0500, boundingDimensions: "22.4 × 12.0 m", xM: 15.0, yM: 30.0, wM: 22.4, hM: 12.0, kind: "net", uncertaintyRadius: "± 9.5 m", pingId: "PING-8902", timestamp: "2026-09-29 10:15:00", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Heavy commercial purse seine net bundle tangled on rocky navigation approach.", recommendedAction: "Dispatch recovery vessel for heavy winch salvage." },
-        { id: "DET-2026-017", missionId: "MSN-NHO-2026-IKK", class: "Shipwreck", confidence: 96, SURE: 95, hazardScore: 91, hazardTier: "CRITICAL", lat: 14.8160, lng: 74.0580, boundingDimensions: "31.0 × 10.5 m", xM: -18.0, yM: 44.0, wM: 31.0, hM: 10.5, kind: "wreck", uncertaintyRadius: "± 8.0 m", pingId: "PING-8910", timestamp: "2026-09-29 10:32:45", verdict: "Confirmed", georeferenceStatus: "GPS/INS Georeferenced", aiInterpretation: "Submerged commercial vessel wreck showing prominent acoustic shadow profile.", recommendedAction: "Publish hazard coordinates to National Hydrographic Office database." },
-        { id: "DET-2026-018", missionId: "MSN-NHO-2026-IKK", class: "Cylinder", confidence: 87, SURE: 86, hazardScore: 66, hazardTier: "MEDIUM", lat: 14.8050, lng: 74.0420, boundingDimensions: "4.5 × 1.2 m", xM: 10.0, yM: 60.0, wM: 4.5, hM: 1.2, kind: "cylinder", uncertaintyRadius: "± 14.0 m", pingId: "PING-8918", timestamp: "2026-09-29 10:48:12", verdict: "Pending", georeferenceStatus: "Ping Header GNSS", aiInterpretation: "Discarded pressurized chemical drum submerged on sandy navigation fairway.", recommendedAction: "Environmental inspection on next survey pass." }
+        // ==================== MISSION 4: MSN-NMLAP-2026-CHN (Chennai NMLAP ASV Survey - 4 Detections) ====================
+        {
+            id: "DET-2026-016",
+            missionId: "MSN-NMLAP-2026-CHN",
+            class: "Ghost Net",
+            confidence: 97,
+            SURE: 95,
+            hazardScore: 96,
+            hazardTier: "CRITICAL",
+            lat: 13.1840,
+            lng: 80.4560,
+            boundingDimensions: "26.0 × 18.0 m",
+            uncertaintyRadius: "± 0.7 m",
+            pingId: "PNG-5401",
+            timestamp: "2026-09-26 14:10:05",
+            verdict: "Confirmed",
+            georeferenceStatus: "ASV RTK-GNSS Georeferenced",
+            aiInterpretation: "Massive plastic ghost gear net aggregation draped over coral patch; active fish and turtle mortality threat.",
+            recommendedAction: "Dispatch National Marine Litter Action Plan marine retrieval catamaran with crane hoist.",
+            shadowLength: "12.0 m",
+            reliefHeight: "3.2 m",
+            backscatterP95: "190 DN",
+            depth: "24 m",
+            vessel: "Autonomous Surface Craft ASV-Samudra",
+            platform: "ASV",
+            programme: "National Marine Litter Action Plan (NMLAP) — NCCR",
+            frequency: "600 kHz Ultra-Res",
+            altitude: "3.8 m",
+            surveySpeed: "3.4 kn",
+            heading: "020° (NNE)",
+            rawX: 75,
+            rawY: 60,
+            rawW: 130,
+            rawH: 95,
+            xM: -15.0,
+            yM: 30.0,
+            wM: 26.0,
+            hM: 18.0
+        },
+        {
+            id: "DET-2026-017",
+            missionId: "MSN-NMLAP-2026-CHN",
+            class: "Cylinder",
+            confidence: 94,
+            SURE: 92,
+            hazardScore: 89,
+            hazardTier: "CRITICAL",
+            lat: 13.1760,
+            lng: 80.4420,
+            boundingDimensions: "12.2 × 2.4 m",
+            uncertaintyRadius: "± 0.9 m",
+            pingId: "PNG-5415",
+            timestamp: "2026-09-26 14:32:18",
+            verdict: "Confirmed",
+            georeferenceStatus: "ASV RTK-GNSS Georeferenced",
+            aiInterpretation: "Submerged 40ft standard intermodal steel shipping container resting askew in Chennai Port approach fairway.",
+            recommendedAction: "Alert Chennai Port Trust VTS (Vessel Traffic Service) to enforce 500m ship exclusion buffer.",
+            shadowLength: "8.4 m",
+            reliefHeight: "2.6 m",
+            backscatterP95: "245 DN",
+            depth: "27 m",
+            vessel: "Autonomous Surface Craft ASV-Samudra",
+            platform: "ASV",
+            programme: "National Marine Litter Action Plan (NMLAP) — NCCR",
+            frequency: "600 kHz Ultra-Res",
+            altitude: "3.9 m",
+            surveySpeed: "3.5 kn",
+            heading: "020° (NNE)",
+            rawX: 240,
+            rawY: 150,
+            rawW: 85,
+            rawH: 55,
+            xM: 16.0,
+            yM: 55.0,
+            wM: 12.2,
+            hM: 2.4
+        },
+        {
+            id: "DET-2026-018",
+            missionId: "MSN-NMLAP-2026-CHN",
+            class: "Pipe",
+            confidence: 89,
+            SURE: 86,
+            hazardScore: 76,
+            hazardTier: "HIGH",
+            lat: 13.1910,
+            lng: 80.4630,
+            boundingDimensions: "14.5 × 1.5 m",
+            uncertaintyRadius: "± 1.3 m",
+            pingId: "PNG-5428",
+            timestamp: "2026-09-26 14:55:40",
+            verdict: "Pending",
+            georeferenceStatus: "ASV RTK-GNSS Georeferenced",
+            aiInterpretation: "Flanged steel dredge discharge pipe section discarded following harbor channel dredging operations.",
+            recommendedAction: "Contractor notification for salvage removal under port environmental compliance covenant.",
+            shadowLength: "3.9 m",
+            reliefHeight: "1.4 m",
+            backscatterP95: "220 DN",
+            depth: "21 m",
+            vessel: "Autonomous Surface Craft ASV-Samudra",
+            platform: "ASV",
+            programme: "National Marine Litter Action Plan (NMLAP) — NCCR",
+            frequency: "600 kHz Ultra-Res",
+            altitude: "3.7 m",
+            surveySpeed: "3.6 kn",
+            heading: "022° (NNE)",
+            rawX: 110,
+            rawY: 250,
+            rawW: 95,
+            rawH: 45,
+            xM: -12.0,
+            yM: 85.0,
+            wM: 14.5,
+            hM: 1.5
+        },
+        {
+            id: "DET-2026-019",
+            missionId: "MSN-NMLAP-2026-CHN",
+            class: "Cylinder",
+            confidence: 84,
+            SURE: 81,
+            hazardScore: 64,
+            hazardTier: "MEDIUM",
+            lat: 13.1710,
+            lng: 80.4350,
+            boundingDimensions: "5.0 × 1.8 m",
+            uncertaintyRadius: "± 1.8 m",
+            pingId: "PNG-5440",
+            timestamp: "2026-09-26 15:20:12",
+            verdict: "Pending",
+            georeferenceStatus: "ASV RTK-GNSS Georeferenced",
+            aiInterpretation: "Submerged cylindrical mooring counterweight buoy encrusted with biofouling and attached chain link.",
+            recommendedAction: "Verify with port navigational aids log if buoy was reported missing during cyclone season.",
+            shadowLength: "2.8 m",
+            reliefHeight: "1.6 m",
+            backscatterP95: "215 DN",
+            depth: "30 m",
+            vessel: "Autonomous Surface Craft ASV-Samudra",
+            platform: "ASV",
+            programme: "National Marine Litter Action Plan (NMLAP) — NCCR",
+            frequency: "600 kHz Ultra-Res",
+            altitude: "4.0 m",
+            surveySpeed: "3.3 kn",
+            heading: "019° (NNE)",
+            rawX: 270,
+            rawY: 340,
+            rawW: 60,
+            rawH: 40,
+            xM: 18.0,
+            yM: 115.0,
+            wM: 5.0,
+            hM: 1.8
+        },
+
+        // ==================== MISSION 5: MSN-SSSS-2026-MUM (Mumbai Shelf SSSS Survey - 3 Detections) ====================
+        {
+            id: "DET-2026-020",
+            missionId: "MSN-SSSS-2026-MUM",
+            class: "Shipwreck",
+            confidence: 98,
+            SURE: 96,
+            hazardScore: 97,
+            hazardTier: "CRITICAL",
+            lat: 18.9250,
+            lng: 72.7860,
+            boundingDimensions: "54.0 × 16.0 m",
+            uncertaintyRadius: "± 0.4 m",
+            pingId: "PNG-4310",
+            timestamp: "2026-09-30 06:22:15",
+            verdict: "Confirmed",
+            georeferenceStatus: "Towfish DGPS Georeferenced",
+            aiInterpretation: "Offshore platform support vessel wreck resting on starboard bilge; major hydrographic shipping hazard in Mumbai High transit corridor.",
+            recommendedAction: "Establish immediate wreck marker buoy; broadcast navigational danger warning on VHF Ch 16.",
+            shadowLength: "38.0 m",
+            reliefHeight: "8.4 m",
+            backscatterP95: "250 DN",
+            depth: "48 m",
+            vessel: "CRV Sagar Tara (Towfish Rig 02)",
+            platform: "Towfish",
+            programme: "Swachh Sagar, Surakshit Sagar — MoES / NCCR",
+            frequency: "500 kHz High-Res",
+            altitude: "7.0 m",
+            surveySpeed: "4.0 kn",
+            heading: "330° (NNW)",
+            rawX: 65,
+            rawY: 80,
+            rawW: 180,
+            rawH: 130,
+            xM: -20.0,
+            yM: 45.0,
+            wM: 54.0,
+            hM: 16.0
+        },
+        {
+            id: "DET-2026-021",
+            missionId: "MSN-SSSS-2026-MUM",
+            class: "Pipe",
+            confidence: 92,
+            SURE: 90,
+            hazardScore: 81,
+            hazardTier: "HIGH",
+            lat: 18.9160,
+            lng: 72.7720,
+            boundingDimensions: "35.0 × 1.8 m",
+            uncertaintyRadius: "± 1.1 m",
+            pingId: "PNG-4322",
+            timestamp: "2026-09-30 06:48:30",
+            verdict: "Confirmed",
+            georeferenceStatus: "Towfish DGPS Georeferenced",
+            aiInterpretation: "Decommissioned high-diameter crude oil transfer flowline unanchored and shifting on dynamic seafloor sediment.",
+            recommendedAction: "Submit bathymetric position update to ONGC offshore asset integrity team for stabilization clamping.",
+            shadowLength: "5.2 m",
+            reliefHeight: "1.7 m",
+            backscatterP95: "232 DN",
+            depth: "52 m",
+            vessel: "CRV Sagar Tara (Towfish Rig 02)",
+            platform: "Towfish",
+            programme: "Swachh Sagar, Surakshit Sagar — MoES / NCCR",
+            frequency: "500 kHz High-Res",
+            altitude: "6.8 m",
+            surveySpeed: "4.1 kn",
+            heading: "330° (NNW)",
+            rawX: 250,
+            rawY: 190,
+            rawW: 100,
+            rawH: 45,
+            xM: 15.0,
+            yM: 78.0,
+            wM: 35.0,
+            hM: 1.8
+        },
+        {
+            id: "DET-2026-022",
+            missionId: "MSN-SSSS-2026-MUM",
+            class: "Ghost Net",
+            confidence: 91,
+            SURE: 89,
+            hazardScore: 88,
+            hazardTier: "CRITICAL",
+            lat: 18.9310,
+            lng: 72.7930,
+            boundingDimensions: "21.0 × 14.0 m",
+            uncertaintyRadius: "± 1.4 m",
+            pingId: "PNG-4335",
+            timestamp: "2026-09-30 07:15:05",
+            verdict: "Pending",
+            georeferenceStatus: "Towfish DGPS Georeferenced",
+            aiInterpretation: "Industrial trawler codend and heavy polyethylene netting snagged around legacy subsea wellhead structure.",
+            recommendedAction: "Queue for diver clearance or salvage vessel hook-and-tow under Swachh Sagar Mission.",
+            shadowLength: "10.5 m",
+            reliefHeight: "2.8 m",
+            backscatterP95: "194 DN",
+            depth: "44 m",
+            vessel: "CRV Sagar Tara (Towfish Rig 02)",
+            platform: "Towfish",
+            programme: "Swachh Sagar, Surakshit Sagar — MoES / NCCR",
+            frequency: "500 kHz High-Res",
+            altitude: "6.9 m",
+            surveySpeed: "3.9 kn",
+            heading: "332° (NNW)",
+            rawX: 120,
+            rawY: 280,
+            rawW: 105,
+            rawH: 80,
+            xM: -10.0,
+            yM: 105.0,
+            wM: 21.0,
+            hM: 14.0
+        }
     ],
 
     getThreatTier: function(confidence, className, hazardScore) {
@@ -113,14 +933,24 @@ window.JalVedhMockData = {
         return "low";
     },
 
-    getFilteredDetections: function() {
+    getFilteredDetections: function(missionScopeOverride) {
         const { minConfidence, selectedClasses, hideNatural } = this.filterState;
         const isGlobalRole = ["admin", "engineer", "viewer"].includes(this.currentRole);
         return this.mockDetections.filter(d => {
-            if (!isGlobalRole && d.missionId && d.missionId !== this.activeMissionId) return false;
+            if (missionScopeOverride !== undefined) {
+                if (missionScopeOverride !== 'all' && d.missionId && d.missionId !== missionScopeOverride) return false;
+            } else if (!isGlobalRole && d.missionId && d.missionId !== this.activeMissionId) {
+                return false;
+            }
             if (d.confidence < minConfidence) return false;
             if (hideNatural && d.class === "Natural (Filtered)") return false;
-            if (selectedClasses.length > 0 && !selectedClasses.includes(d.class)) return false;
+            if (selectedClasses && selectedClasses.length > 0) {
+                const match = selectedClasses.some(c => 
+                    d.class.toLowerCase().includes(c.toLowerCase()) || 
+                    c.toLowerCase().includes(d.class.toLowerCase())
+                );
+                if (!match) return false;
+            }
             return true;
         });
     },
@@ -207,68 +1037,13 @@ window.JalVedhMockData = {
             plannedDate: profile.plannedDate || new Date().toISOString().slice(0, 10),
             leadScientist: profile.leadScientist || "Dr. Rajesh Sharma (Lead Hydrographer, Acoustic Survey Division)",
             notes: profile.notes || "Operational side-scan survey campaign for benthic ghost gear clearance.",
-            totalDetections: 2,
+            totalDetections: 0,
             status: "Active",
             date: new Date().toISOString().slice(0, 10),
             location: profile.location || "Coastal Shelf Sector",
             lat: lat,
             lng: lng
         };
-
-        // Create 2 realistic baseline detections for this newly created mission
-        const detId1 = `DET-2026-${String(this.mockDetections.length + 1).padStart(3, '0')}`;
-        const detId2 = `DET-2026-${String(this.mockDetections.length + 2).padStart(3, '0')}`;
-
-        this.mockDetections.unshift(
-            {
-                id: detId1,
-                missionId: newId,
-                class: "Ghost Net",
-                confidence: 95,
-                SURE: 93,
-                hazardScore: 92,
-                hazardTier: "CRITICAL",
-                lat: parseFloat((lat + 0.0035).toFixed(4)),
-                lng: parseFloat((lng + 0.0028).toFixed(4)),
-                boundingDimensions: "15.8 × 9.2 m",
-                xM: -22.0,
-                yM: 18.0,
-                wM: 15.8,
-                hM: 9.2,
-                kind: "net",
-                uncertaintyRadius: "± 10.2 m",
-                pingId: `PNG-${Math.floor(8100 + Math.random() * 500)}`,
-                timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                verdict: "Pending",
-                georeferenceStatus: "GPS/INS Georeferenced",
-                aiInterpretation: `Acoustic shadow highlights dense derelict trawl net webbing draped over seabed in ${newMission.location}.`,
-                recommendedAction: "Immediate retrieval boat dispatch. Priority 1 hazard."
-            },
-            {
-                id: detId2,
-                missionId: newId,
-                class: "Cylinder",
-                confidence: 86,
-                SURE: 84,
-                hazardScore: 65,
-                hazardTier: "MEDIUM",
-                lat: parseFloat((lat - 0.0024).toFixed(4)),
-                lng: parseFloat((lng - 0.0031).toFixed(4)),
-                boundingDimensions: "3.4 × 1.2 m",
-                xM: 16.0,
-                yM: 42.0,
-                wM: 3.4,
-                hM: 1.2,
-                kind: "cylinder",
-                uncertaintyRadius: "± 14.0 m",
-                pingId: `PNG-${Math.floor(8600 + Math.random() * 500)}`,
-                timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                verdict: "Pending",
-                georeferenceStatus: "GPS/INS Georeferenced",
-                aiInterpretation: "Submerged metallic cylinder / pressurized tank on seabed substrate.",
-                recommendedAction: "Inspect on next autonomous survey pass."
-            }
-        );
 
         this.mockMissions.unshift(newMission);
         this.activeMissionId = newId;
@@ -454,25 +1229,41 @@ window.JalVedhMockData = {
         }
     },
 
-    exportJSON: function() {
-        const data = this.getFilteredDetections();
+    _resolveExportData: function(customData) {
+        if (customData && Array.isArray(customData) && customData.length > 0) {
+            return customData;
+        }
+        if (window.activeScanDetections && Array.isArray(window.activeScanDetections) && window.activeScanDetections.length > 0) {
+            return window.activeScanDetections;
+        }
+        const scoped = (this.mockDetections || []).filter(d => !d.missionId || d.missionId === this.activeMissionId);
+        if (scoped && scoped.length > 0) {
+            return scoped;
+        }
+        return this.getFilteredDetections(this.activeMissionId);
+    },
+
+    exportJSON: function(customData) {
+        const data = this._resolveExportData(customData);
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `JalVedh_Hazard_Report_${this.activeMissionId}_${new Date().toISOString().slice(0,10)}.json`);
+        downloadAnchor.setAttribute("download", `JalVedh_Hazard_Report_${targetMissionId}_${new Date().toISOString().slice(0,10)}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        this.logAudit(`EXPORT: Downloaded JSON Evidence Report for ${this.activeMissionId}`);
-        if (window.showToast) window.showToast(`Hazard Report for ${this.activeMissionId} exported as JSON`, "success");
+        this.logAudit(`EXPORT: Downloaded JSON Evidence Report for ${targetMissionId}`);
+        if (window.showToast) window.showToast(`Hazard Report for ${targetMissionId} (${data.length} target${data.length === 1 ? '' : 's'}) exported as JSON`, "success");
     },
 
-    exportGeoJSON: function() {
-        const data = this.getFilteredDetections();
-        const mission = this.mockMissions.find(m => m.id === this.activeMissionId);
+    exportGeoJSON: function(customData) {
+        const data = this._resolveExportData(customData);
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
+        const mission = this.mockMissions.find(m => m.id === targetMissionId) || this.mockMissions[0];
         const featureCollection = {
             type: "FeatureCollection",
-            name: `JalVedh Hazard Map - ${this.activeMissionId}`,
+            name: `JalVedh Hazard Map - ${targetMissionId}`,
             mission: mission ? {
                 id: mission.id,
                 name: mission.name,
@@ -490,7 +1281,7 @@ window.JalVedhMockData = {
                     coordinates: [d.lng, d.lat]
                 },
                 properties: {
-                    missionId: d.missionId,
+                    missionId: d.missionId || targetMissionId,
                     class: d.class,
                     confidence: d.confidence,
                     sureReliability: d.SURE,
@@ -509,67 +1300,72 @@ window.JalVedhMockData = {
         const dataStr = "data:application/geo+json;charset=utf-8," + encodeURIComponent(JSON.stringify(featureCollection, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `JalVedh_Hazard_Map_${this.activeMissionId}_${new Date().toISOString().slice(0,10)}.geojson`);
+        downloadAnchor.setAttribute("download", `JalVedh_Hazard_Map_${targetMissionId}_${new Date().toISOString().slice(0,10)}.geojson`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        this.logAudit(`EXPORT: Downloaded GeoJSON Hazard Map for ${this.activeMissionId}`);
-        if (window.showToast) window.showToast(`Hazard map for ${this.activeMissionId} exported as GeoJSON`, "success");
+        this.logAudit(`EXPORT: Downloaded GeoJSON Hazard Map for ${targetMissionId}`);
+        if (window.showToast) window.showToast(`Hazard map for ${targetMissionId} (${data.length} target${data.length === 1 ? '' : 's'}) exported as GeoJSON`, "success");
     },
 
-    exportCSV: function() {
-        const data = this.getFilteredDetections();
+    exportCSV: function(customData) {
+        const data = this._resolveExportData(customData);
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
         let csvContent = "data:text/csv;charset=utf-8,ID,Mission,Class,AIConfidence(%),MARLINSUREReliability(%),HazardSeverityScore(0-100),HazardTier,Latitude,Longitude,Dimensions,PositionUncertainty,Verdict,GeoreferenceStatus,Timestamp\n";
         data.forEach(d => {
-            csvContent += `${d.id},${d.missionId},"${d.class}",${d.confidence},${d.SURE},${d.hazardScore},${d.hazardTier},${d.lat},${d.lng},"${d.boundingDimensions}","${d.uncertaintyRadius}",${d.verdict},"${d.georeferenceStatus || 'GPS/INS Georeferenced'}",${d.timestamp}\n`;
+            csvContent += `${d.id},${d.missionId || targetMissionId},"${d.class}",${d.confidence},${d.SURE},${d.hazardScore},${d.hazardTier},${d.lat},${d.lng},"${d.boundingDimensions}","${d.uncertaintyRadius}",${d.verdict},"${d.georeferenceStatus || 'GPS/INS Georeferenced'}",${d.timestamp}\n`;
         });
         const encodedUri = encodeURI(csvContent);
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", encodedUri);
-        downloadAnchor.setAttribute("download", `JalVedh_Hazard_Report_${this.activeMissionId}_${new Date().toISOString().slice(0,10)}.csv`);
+        downloadAnchor.setAttribute("download", `JalVedh_Hazard_Report_${targetMissionId}_${new Date().toISOString().slice(0,10)}.csv`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        this.logAudit(`EXPORT: Downloaded CSV Hazard Report for ${this.activeMissionId}`);
-        if (window.showToast) window.showToast(`Hazard Report for ${this.activeMissionId} exported as CSV`, "success");
+        this.logAudit(`EXPORT: Downloaded CSV Hazard Report for ${targetMissionId}`);
+        if (window.showToast) window.showToast(`Hazard Report for ${targetMissionId} (${data.length} target${data.length === 1 ? '' : 's'}) exported as CSV`, "success");
     },
 
-    exportNMEA: function() {
-        const data = this.getFilteredDetections();
+    exportNMEA: function(customData) {
+        const data = this._resolveExportData(customData);
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
         let nmeaContent = "data:text/plain;charset=utf-8,$JALVEDH_WAYPOINTS\n";
         data.forEach(d => {
-            nmeaContent += `$GPGGA,${d.timestamp.slice(11,19).replace(/:/g,'')},${d.lat}N,${d.lng}E,1,08,0.9,${d.class},M,,M,,\n`;
+            const timeStr = d.timestamp ? d.timestamp.slice(11,19).replace(/:/g,'') : '120000';
+            nmeaContent += `$GPGGA,${timeStr},${d.lat}N,${d.lng}E,1,08,0.9,${d.class},M,,M,,\n`;
         });
         const encodedUri = encodeURI(nmeaContent);
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", encodedUri);
-        downloadAnchor.setAttribute("download", `JalVedh_NMEA_Waypoints_${this.activeMissionId}_${new Date().toISOString().slice(0,10)}.txt`);
+        downloadAnchor.setAttribute("download", `JalVedh_NMEA_Waypoints_${targetMissionId}_${new Date().toISOString().slice(0,10)}.txt`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        if (window.showToast) window.showToast(`NMEA Waypoints for ${this.activeMissionId} exported for ECDIS`, "success");
+        if (window.showToast) window.showToast(`NMEA Waypoints for ${targetMissionId} (${data.length} waypoint${data.length === 1 ? '' : 's'}) exported for ECDIS`, "success");
     },
 
-    exportKML: function() {
-        const data = this.getFilteredDetections();
-        let kmlContent = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>JalVedh Hazard Dive Plan - ${this.activeMissionId}</name>`;
+    exportKML: function(customData) {
+        const data = this._resolveExportData(customData);
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
+        let kmlContent = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>JalVedh Hazard Dive Plan - ${targetMissionId}</name>`;
         data.forEach(d => {
-            kmlContent += `<Placemark><name>${d.id} - ${d.class} (Hazard Risk: ${d.hazardScore}/100)</name><description>${d.aiInterpretation} Field Action: ${d.recommendedAction}</description><Point><coordinates>${d.lng},${d.lat},0</coordinates></Point></Placemark>`;
+            kmlContent += `<Placemark><name>${d.id} - ${d.class} (Hazard Risk: ${d.hazardScore}/100)</name><description>${d.aiInterpretation || d.class} Field Action: ${d.recommendedAction || 'Inspect'}</description><Point><coordinates>${d.lng},${d.lat},0</coordinates></Point></Placemark>`;
         });
         kmlContent += `</Document></kml>`;
         const dataStr = "data:text/xml;charset=utf-8," + encodeURIComponent(kmlContent);
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `JalVedh_KML_DivePlan_${this.activeMissionId}_${new Date().toISOString().slice(0,10)}.kml`);
+        downloadAnchor.setAttribute("download", `JalVedh_KML_DivePlan_${targetMissionId}_${new Date().toISOString().slice(0,10)}.kml`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        if (window.showToast) window.showToast(`Google Earth KML Dive Plan for ${this.activeMissionId} exported`, "success");
+        if (window.showToast) window.showToast(`Google Earth KML Dive Plan for ${targetMissionId} (${data.length} target${data.length === 1 ? '' : 's'}) exported`, "success");
     },
 
-    exportPrintablePDF: function() {
-        const data = this.getFilteredDetections();
-        const activeMission = this.mockMissions.find(m => m.id === this.activeMissionId) || this.mockMissions[0];
+    exportPrintablePDF: function(customData) {
+        const data = this._resolveExportData(customData);
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
+        const activeMission = this.mockMissions.find(m => m.id === targetMissionId) || this.mockMissions[0];
         const printWin = window.open('', '_blank');
         
         let canvasDataUrl = '';
@@ -623,12 +1419,12 @@ window.JalVedhMockData = {
 
             <div class="narrative-box">
                 <strong>Executive Narrative Technical Assessment:</strong><br>
-                Automated side-scan sonar ping analysis for <strong>${activeMission.name} (${activeMission.id})</strong> identified ${data.length} localized benthic anomalies. Dual-frequency acoustic normalization (SONAR-DAPT) combined with SHARP shadow geometry modeling confirmed synthetic ghost net fouling over coral habitats with a maximum Hazard Severity Score of 95/100 (CRITICAL).
+                Automated side-scan sonar ping analysis for <strong>${activeMission.name} (${activeMission.id})</strong> identified ${data.length} localized benthic anomaly target${data.length === 1 ? '' : 's'}. Dual-frequency acoustic normalization (SONAR-DAPT) combined with SHARP shadow geometry modeling confirmed synthetic hazard features with reliable confidence metrics.
             </div>
 
             ${canvasDataUrl ? '<div style="margin-bottom:24px;text-align:center;"><h3 style="text-align:left;color:#0b2545;font-size:1.1rem;margin-bottom:10px;">Analyzed Sonar Image Snapshot</h3><img src="' + canvasDataUrl + '" style="max-width:100%;max-height:350px;border:2px solid #12b4c4;border-radius:8px;box-shadow:0 4px 8px rgba(0,0,0,0.1);" /></div>' : ''}
 
-            <h3 style="color:#0b2545;font-size:1.1rem;margin-bottom:10px;">Mission Target Manifest & Risk Telemetry Table</h3>
+            <h3 style="color:#0b2545;font-size:1.1rem;margin-bottom:10px;">Mission Target Manifest & Risk Telemetry Table (${data.length} Target${data.length === 1 ? '' : 's'})</h3>
             <table>
                 <thead>
                     <tr>
@@ -638,26 +1434,26 @@ window.JalVedhMockData = {
                         <th>MARLIN SURE (%)</th>
                         <th>Hazard Severity Score</th>
                         <th>Geographic Coordinates</th>
-                        <th>Acoustic Shadow</th>
+                        <th>Acoustic Relief</th>
                         <th>Position Uncertainty</th>
                         <th>Verdict</th>
                     </tr>
                 </thead>
                 <tbody>`;
         data.forEach(d => {
-            const critStyle = d.hazardScore >= 85 ? 'class="badge-crit"' : 'class="badge-high"';
+            const critStyle = (d.hazardScore || 80) >= 85 ? 'class="badge-crit"' : 'class="badge-high"';
             const shadowStatus = (d.estimatedRelief || "Detected");
             html += `
                 <tr>
                     <td><strong>${d.id}</strong></td>
                     <td>${d.class}</td>
                     <td>${d.confidence}%</td>
-                    <td>${d.SURE}%</td>
-                    <td ${critStyle}>${d.hazardScore}/100 (${d.hazardTier})</td>
+                    <td>${d.SURE || d.confidence}%</td>
+                    <td ${critStyle}>${d.hazardScore || 80}/100 (${d.hazardTier || 'HIGH'})</td>
                     <td>${d.lat}° N, ${d.lng}° E</td>
-                    <td>Detected</td>
-                    <td>${d.uncertaintyRadius}</td>
-                    <td><strong>${d.verdict}</strong></td>
+                    <td>${shadowStatus}</td>
+                    <td>${d.uncertaintyRadius || '± 0.4 m'}</td>
+                    <td><strong>${d.verdict || 'Pending'}</strong></td>
                 </tr>`;
         });
         html += `
@@ -673,18 +1469,22 @@ window.JalVedhMockData = {
         printWin.document.close();
         printWin.focus();
         setTimeout(() => printWin.print(), 800); // Slight delay for image to load
-        if (window.showToast) window.showToast(`Publication-Ready PDF Report generated for ${activeMission.id}`, "success");
+        if (window.showToast) window.showToast(`Publication-Ready PDF Report generated for ${targetMissionId}`, "success");
     },
 
-    exportEvidenceBundle: function(id) {
-        const activeMission = this.mockMissions.find(m => m.id === this.activeMissionId) || this.mockMissions[0];
-        let data = this.getFilteredDetections();
-        if (id) {
-            const single = this.mockDetections.find(d => d.id === id);
-            if (single) data = [single];
+    exportEvidenceBundle: function(id, customData) {
+        let data = customData;
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            if (id) {
+                const single = this.mockDetections.find(d => d.id === id);
+                if (single) data = [single];
+            } else {
+                data = this._resolveExportData();
+            }
         }
-
-        const missionId = id ? `${this.activeMissionId}_${id}` : this.activeMissionId;
+        const targetMissionId = (data && data.length > 0 && data[0].missionId) ? data[0].missionId : this.activeMissionId;
+        const activeMission = this.mockMissions.find(m => m.id === targetMissionId) || this.mockMissions[0];
+        const missionId = id ? `${targetMissionId}_${id}` : targetMissionId;
 
         // 1. Manifest JSON
         const manifestObj = {

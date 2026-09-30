@@ -1,0 +1,55 @@
+# Dependencies and virtual environments
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Logs and generated test artifacts
+*.log
+logs/
+runs/
+test-results/
+playwright-report/
+scratch/
+scratch*/
+
+# Test screenshots in root (keep Client UI assets tracked)
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+!Client/**
+
+# Training datasets and generated training artifacts
+production_balanced_v1/
+production_balanced_fast/
+production_balanced_v2/
+*.pkl
+*.ckpt
+*.pth
+
+# Final deployable weights are intentionally versioned.
+!*.pt
+!*.onnx
+
+# Operating system and IDE files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo

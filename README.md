@@ -1,32 +1,42 @@
-# Webgl-FFT-Ocean-
-Webgl Ocean based on Tessendorf paper. Implementation of Phillips spectrum and its inverse FFT.
+# JalVedh AI
 
-The grid used is a projected grid from screenspace to worldspace.
-The static, dynamic Phillips spectrum and the inverse FFT of it is displayed on the left panel.
+JalVedh AI is a side-scan sonar analysis prototype for detecting marine debris and other underwater targets. It pairs a browser dashboard with a FastAPI inference service using YOLO model weights.
 
-To run the program:
-- Use nodejs app.js.
+## Project layout
 
-Commands:
-  - W: toggle wireframe
-  - Left, right, up, down arrow: displacement given a direction
-  - s,x: pitch,
-  - a,z : up, down
+- `Client/` contains the static frontend: the landing page, dashboard, styling, JavaScript, and sample sonar imagery.
+- `app.js` is the Express server that serves the frontend.
+- `yolo_server.py` is the FastAPI backend for preprocessing, detection, validation, and georeferencing.
+- `preprocess.py`, `physics_validator.py`, and related Python modules support the backend pipeline.
+- `marine_debris_yolov8.pt` and `yolov8n.pt` are tracked model weights.
 
-Small program written in typescript. It displays a wave constructed by the inverse FFT of the Phillips spectrum.
+Training datasets and generated training runs are intentionally excluded from Git. See `.gitignore` for the full list.
 
-Further work: 
- - The sun is missing, should be aaded in the skybox shader
- - Better and more realistic scattering should be implemented
- - better UX
- - remove symmetry on the ocean by blending it with perlin noise
- - port the FFT on the GPU
- 
- 
+## Run the frontend
 
-<img src="https://github.com/Frederoche/Webgl-FFT-Ocean-/raw/master/waves1.PNG" width="600" style="max-width:100%;">
-<img src="https://github.com/Frederoche/Webgl-FFT-Ocean-/raw/master/Capture.PNG" width="600" style="max-width:100%;">
+Install Node.js, then run:
 
-<br>
-<a href="https://www.youtube.com/watch?v=eGQRCdBPOO4">Video</a>
+```powershell
+npm install
+npm start
+```
+
+Open `http://localhost:8000` in a browser. The dashboard is also available at `http://localhost:8000/app`.
+
+## Run the backend
+
+Use Python 3.10 or later. From PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install fastapi uvicorn ultralytics opencv-python numpy python-multipart
+uvicorn yolo_server:app --reload --port 8001
+```
+
+The health endpoint is available at `http://127.0.0.1:8001/health`.
+
+## Environment configuration
+
+Copy `.env.example` to `.env` only when local configuration is needed. Never commit `.env` files, tokens, credentials, private keys, datasets, or training outputs.
 
