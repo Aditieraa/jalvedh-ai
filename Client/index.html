@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JalVedh AI | Marine Debris & Anomaly Intelligence</title>
+    
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/png" href="logo-icon.png">
+    <link rel="shortcut icon" type="image/png" href="logo-icon.png">
+    <link rel="apple-touch-icon" href="logo-icon.png">
+    
+    <!-- Google Font Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+    <link href="css/styles.css" rel="stylesheet"/>
+    <link href="css/app-dashboard.css" rel="stylesheet"/>
+    <script>
+        (function() {
+            try {
+                var validTabs = ['sonar-ingestion','missions','dashboard','anomaly-map','reports-export','high-risk-triage','marlin-engine','sonar-dapt','ocean-learn','edge-fleet','admin-panel','impact-about'];
+                var hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+                if (hash && validTabs.indexOf(hash) !== -1) {
+                    window.location.replace('app.html#' + hash);
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <!-- Leaflet CSS & JS for Geotagged Anomaly Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+    <script src="Javascript/ocean.js"></script>
+    <script src="Javascript/mockApi.js"></script>
+    <script src="Javascript/app-dashboard.js"></script>
+
+    <!-- Skybox Shaders -->
+    <script id="skyBoxVertexShader" type="x-shader/x-vertex">
+        precision mediump float; 
+        uniform mat4 projMatrix; 
+        uniform mat4 viewMatrix; 
+
+        attribute vec2 texCoord; 
+        attribute vec3 position; 
+
+        varying vec2 texcoord; 
+        varying vec3 wPos; 
+        varying vec4 scaledPos;
+
+        varying float size;
+        
+        void main(void) 
+        { 
+            texcoord = texCoord;    
+            wPos = position; 
+            size = 2000.0;
+
+            scaledPos = vec4(position.x * size, position.y * size, position.z * size, 1.0);
+            gl_Position = projMatrix * viewMatrix * vec4(position.x * size, position.y * size, position.z * size, 1.0);
+        }
+    </script>
+
+    <script id="skyBoxfragmentShader" type="x-shader/x-fragment">
+        precision highp float;
+
+        varying vec2 texcoord; 
+        varying vec3 wPos; 
+        varying vec4 scaledPos;
+        varying float size;
+
+        uniform sampler2D texture; 
+        uniform vec3 cameraPosition;
+        
+        uniform vec4 clipplane;
+        uniform float isclipped;
+
+        // Hash function for procedural noise
+        float hash(vec2 p) {
+            p = fract(p * vec2(123.34, 456.21));
+            p += dot(p, p + 45.32);
+            return fract(p.x * p.y);
+        }
+
+        // Smooth 2D Noise
+        float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+                       mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+        }
+
+        // Multi-octave FBM Noise for realistic organic clouds
+        float fbm(vec2 p) {
+            float v = 0.0;
+            float a = 0.5;
+            mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+            for (int i = 0; i < 4; i++) {
+                v += a * noise(p);
+                p = rot * p * 2.05;
+                a *= 0.5;
+            }
+            return v;
+        }
+
+        void main(void) 
+        { 
+            if(isclipped == 1.0 && dot(scaledPos, clipplane) >= 0.0)
+            { 
+                discard; 
+            } 
+
+            if(wPos.y < -0.01) {
+                gl_FragColor = vec4(0.05, 0.2, 0.25, 1.0);
+                return;
+            }
+
+            // EXACT SKY GRADIENT MATCHING UPLOADED REFERENCE IMAGE
+            float h = clamp(wPos.y * 2.2, 0.0, 1.0);
+            
+            vec3 skyTop = vec3(0.08, 0.62, 0.90);       // Bright Vibrant Cyan-Blue at zenith (#149ee6)
+            vec3 skyMid = vec3(0.32, 0.76, 0.96);       // Luminous Sky Cyan-Blue (#52c2f5)
+            vec3 skyHorizon = vec3(0.78, 0.93, 0.99);   // Bright Ice-Cyan Horizon Atmosphere (#c7edfc)
+            vec3 skyBase = vec3(0.88, 0.96, 1.0);       // Crisp Soft White-Cyan at sea line (#e0f5ff)
+
+            vec3 color = mix(skyBase, skyHorizon, smoothstep(0.0, 0.15, h));
+            color = mix(color, skyMid, smoothstep(0.15, 0.50, h));
+            color = mix(color, skyTop, smoothstep(0.50, 1.0, h));
+
+            // NATURAL LUMINOUS WHITE CLOUD BLENDING
+            vec2 cloudUV1 = vec2(wPos.x * 1.5 + 0.2, wPos.y * 5.0);
+            vec2 cloudUV2 = vec2(wPos.x * 2.2 - 0.5, wPos.y * 10.0);
+            
+            float cloudFbm1 = fbm(cloudUV1);
+            float cloudFbm2 = fbm(cloudUV2);
+            
+            float cloudMask1 = smoothstep(0.35, 1.0, h);
+            float cloudMask2 = smoothstep(0.08, 0.50, h) * (1.0 - smoothstep(0.60, 1.0, h));
+            
+            float softClouds1 = smoothstep(0.40, 0.70, cloudFbm1) * cloudMask1 * 0.55;
+            float softClouds2 = smoothstep(0.42, 0.75, cloudFbm2) * cloudMask2 * 0.40;
+            
+            vec3 cloudPureWhite = vec3(0.98, 0.99, 1.0);
+            color = mix(color, cloudPureWhite, clamp(softClouds1 + softClouds2, 0.0, 0.70));
+
+            // CENTERED SUN & GLOW (SOFT, NATURAL & REDUCED GLOW)
+            vec2 sunPosition = vec2(0.0, 0.2);
+            float sunDistance = distance(wPos.xy, sunPosition);
+            float sunDisc = 1.0 - smoothstep(0.008, 0.018, sunDistance);
+            float sunGlow = exp(-sunDistance * sunDistance / 0.0012) * 0.12;
+            vec3 sunColor = vec3(1.0, 0.98, 0.92);
+            color = mix(color, sunColor, sunDisc * 0.85);
+            color += sunColor * sunGlow;
+
+            gl_FragColor = vec4(color, 1.0);
+        }
+    </script>
+
+    <!-- Ocean Surface Shaders -->
+    <script id="vertexShader" type="x-shader/x-vertex">#version 300 es
+        precision mediump float; 
+        precision highp sampler2D;
+
+        uniform mat4 projMatrix; 
+        uniform mat4 viewMatrix;
+        uniform mat4 birdviewMatrix;
+
+        uniform vec3 cameraPosition; 
+
+        uniform mat4 invProjMatrix;
+        uniform mat4 invViewMatrix;
+          
+        uniform sampler2D displacement; 
+
+        in vec3 position; 
+        in vec2 texCoord; 
+        
+        out vec2 texcoord; 
+        out vec4 clipSpace;
+        
+        out vec4 wPosition; 
+        out vec4 pos; 
+        out vec3 camPos;
+
+        vec4 getTexture(sampler2D sampler, vec2 coord)
+        {
+            vec4 d0 = texture(sampler, coord);
+            vec4 d1 = texture(sampler, coord/8.0)*8.0;
+            vec4 d3 = texture(sampler, coord/2.0)*2.0;
+
+            return d0 + d1 + d3;
+        }
+
+        void main(void)
+        { 
+            vec3 cameraSpace = normalize((invProjMatrix * vec4(position.x, position.z ,0.0, 1.0)).xyz);
+            vec3 worldSpace  = (invViewMatrix * vec4(cameraSpace, 0.0)).xyz;
+
+            float t = (-cameraPosition.y)/worldSpace.y;
+            vec3 u = (cameraPosition + t * worldSpace);
+
+            texcoord = (u.xz + 1.0) * 0.5;
+            vec4 d = getTexture(displacement, texcoord);
+            camPos = cameraPosition;
+              
+            // HORIZON ATTENUATION
+            float att = 4.0/pow(length(camPos - u), 1.0/2.0);
+            
+            u.y = (d.y) * att;
+            u.x = (u.x + d.x);
+            u.z = (u.z + d.z);
+            
+            wPosition = vec4(u.x, u.y, u.z, 1.0);
+            clipSpace = projMatrix * viewMatrix * vec4(u , 1.0); 
+            pos = (viewMatrix * vec4(worldSpace , 1.0)); 
+            
+            if (t > 0.0) 
+            {
+                gl_Position = projMatrix * viewMatrix * vec4(u , 1.0);
+            }
+            else
+            {
+                gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+            }
+        }
+    </script>
+
+    <script id="fragmentShader" type="x-shader/x-fragment">#version 300 es
+        precision highp float;
+        precision highp sampler2D;
+
+        in vec2 texcoord; 
+
+        uniform sampler2D displacement; 
+        uniform sampler2D reflectionSampler;
+        uniform sampler2D refractionSampler; 
+
+        in vec3 camPos;
+        in vec4 wPosition;
+        in vec4 normalWorld; 
+        in vec4 pos; 
+        
+        in vec4 eyespacePos;
+        in vec4 clipSpace;
+
+        layout(location = 0) out vec4 outputColor;
+
+        vec4 getTexture(sampler2D sampler, vec2 coord)
+        {
+            vec4 d0 = texture(sampler, coord);
+            vec4 d1 = texture(sampler, coord/8.0)*8.0;
+            vec4 d3 = texture(sampler, coord/2.0)*2.0;
+
+            return d0 + d1 + d3;
+        }
+
+        vec3 calcNormals(sampler2D text, vec2 texcoords) { 
+            float texel = 1.0 / 128.0;
+            float texelSize = 2.0 / 128.0; 
+
+            vec3 center = getTexture(text, texcoords).xyz; 
+
+            vec3 left   = vec3(-texelSize, 0.0, 0.0) + getTexture(text, texcoords + vec2(-texel, 0.0)).xyz - center; 
+            vec3 right  = vec3(texelSize, 0.0, 0.0)  + getTexture(text, texcoords + vec2(texel, 0.0)).xyz  - center; 
+            vec3 bottom = vec3(0.0, 0.0, texelSize)  + getTexture(text, texcoords + vec2(0.0, texel)).xyz  - center;
+            vec3 top    = vec3(0.0, 0.0, -texelSize) + getTexture(text, texcoords + vec2(0.0, -texel)).xyz - center; 
+
+            vec3 topRight    = cross(right, top); 
+            vec3 topLeft     = cross(top, left); 
+            vec3 bottomLeft  = cross(left, bottom); 
+            vec3 bottomRight = cross(bottom, right); 
+    
+            return normalize(bottomRight + bottomLeft + topLeft + topRight); 
+        }
+        
+        void main(void) { 
+            vec3 LIGHTCOLOR      = vec3(1.0, 1.0, 0.5); 
+            vec3 SEA_WATER_COLOR = vec3(0.05, 0.2, 0.3); 
+            vec4 LIGHT_POSITION  = vec4(0.0, 50.0, -1900.0, 1.0); 
+            
+            float PI = 3.1415;
+
+            vec3 lightDir = normalize(LIGHT_POSITION.xyz); 
+            vec3 view     = normalize(camPos - wPosition.xyz); 
+
+            vec3 H = normalize(lightDir + view);
+            vec3 normal  = calcNormals(displacement, texcoord);
+            
+            if (dot(view, normal) < 0.0) {
+                normal = reflect(normal, -view);
+            }
+            
+            // REFLECTION
+            vec2 reflectionCoord;
+            reflectionCoord.x = 0.5 * (clipSpace.w + clipSpace.x) / clipSpace.w;
+            reflectionCoord.y = 0.5 * (clipSpace.w + clipSpace.y) / clipSpace.w;
+
+            // DISTORTION
+            vec4 reflectionTex = texture(reflectionSampler, reflectionCoord + 0.1 * normal.xz);
+
+            vec3 refraction = SEA_WATER_COLOR; 
+            vec3 reflection = reflectionTex.xyz; 
+            
+            // COOK TORRANCE 
+            float NdotL = max(dot(normal, lightDir), 0.0);
+            float specularBRDF  = 0.0;
+            float k = 0.1;
+            
+            // SPECULAR
+            float NdotH = max(dot(normal, H), 0.0);
+            float NdotV = max(dot(normal, view), 0.0);
+            float VdotH = max(dot(view, H), 0.0);
+            
+            float NH2 = 2.0 * NdotH;
+            float gb = (NH2 * NdotV) / VdotH;
+            float gc = (NH2 * NdotL) / VdotH;
+            float geometricalAttenuation = min(1.0, min(gb, gc));
+            
+            // DISTRIBUTION
+            float constant = 1.0 / (PI * 0.01 * pow(NdotH, 4.0));
+            float exponant = (NdotH * NdotH - 1.0) / (0.01 * NdotH * NdotH);
+            float roughness = constant * exp(exponant);
+            
+            float fresnelMat = pow(1.0 - VdotH, 5.0) * 0.98 + 0.02;
+            
+            if(NdotL > 0.0)
+            {
+                specularBRDF = (fresnelMat * geometricalAttenuation * roughness) / (NdotV * NdotL * 4.0);
+            }
+            
+            vec3 cook = LIGHTCOLOR * NdotL * (specularBRDF * (1.0 - k));
+            float fresnelWater = 0.02 + 0.98 * pow(1.0 - dot(normal, view), 5.0);
+            
+            vec3 color = cook + mix(refraction/PI, reflection, fresnelWater) + vec3(0.1, 0.1, 0.1);
+            color += vec3(0.05, 0.3, 0.3) * (wPosition.y * 2.0 / (length(camPos.xyz - wPosition.xyz)));
+            
+            // HDR TONEMAPPING
+            color = vec3(1.0) - exp(-1.5 * color);
+            outputColor = vec4(color, 1.0);
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Background Fixed 3D Ocean Canvas -->
+    <canvas id="canvas"></canvas>
+
+    <!-- Top Fixed Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="logo-wrapper">
+                    <img src="logo-icon.png" alt="JalVedh Logo" class="nav-logo-img">
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">JalVedh <span class="brand-ai">AI</span></span>
+                    <span class="brand-sub">Sonar to insight · Team Yukti</span>
+                </div>
+            </a>
+
+            <div class="nav-links">
+                <a href="#capabilities" class="nav-link">Capabilities</a>
+                <a href="#workflow" class="nav-link">Workflow</a>
+                <a href="#ai-engine" class="nav-link">AI Engine</a>
+                <a href="#impact" class="nav-link">Impact</a>
+            </div>
+
+            <div class="nav-actions">
+                <a href="#" onclick="openRoleModal(); return false;" class="nav-signin">Login</a>
+                <a href="https://www.youtube.com" target="_blank" id="btn-view-demo-video" class="nav-btn-primary">View demo video</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Overlay Container -->
+    <div class="hero-container">
+        <div class="hero-overlay">
+            <div class="hero-grid">
+                <!-- Left Text Content (Soft Ice-Cyan Box Background with Blueprint Grid Accent) -->
+                <div class="hero-text-content">
+                    <svg class="title-grid-accent" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 20H160M0 40H160M0 60H160M0 80H160M0 100H160" stroke="#008b94" stroke-width="1" stroke-opacity="0.2"/>
+                        <path d="M20 0V120M40 0V120M60 0V120M80 0V120M100 0V120M120 0V120M140 0V120" stroke="#008b94" stroke-width="1" stroke-opacity="0.2"/>
+                    </svg>
+                    <h1 class="hero-title">
+                        <span class="text-line-1">From sonar to insight,</span><br>
+                        <span class="text-jalvedh">JalVedh</span> <span class="text-detects">detects </span><span class="text-what">what</span><br>
+                        <span class="text-line-3">lies beneath the</span><br>
+                        <span class="text-line-4">ocean.</span>
+                    </h1>
+                    <p class="hero-description">
+                        An AI-powered platform that turns raw side-scan sonar imagery into actionable marine anomaly intelligence — ghost nets, shipwrecks, pipes and cylinders — scored for confidence, cleared of seabed false positives, and delivered as geotagged, exportable hazard reports.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#" onclick="openRoleModal(); return false;" class="btn btn-primary">Explore Platform & Dashboard <span class="arrow">→</span></a>
+                    </div>
+                </div>
+
+                <!-- Right Animated Live Sonar Radar Sweep Card -->
+                <div class="hero-radar-card">
+
+                    <div class="radar-display">
+                        <div class="radar-ring ring-1"></div>
+                        <div class="radar-ring ring-2"></div>
+                        <div class="radar-ring ring-3"></div>
+                        <div class="radar-ring ring-4"></div>
+                        
+                        <div class="radar-crosshair crosshair-v"></div>
+                        <div class="radar-crosshair crosshair-h"></div>
+                        
+                        <div class="radar-sweep-ray"></div>
+                        
+                        <div class="radar-blip blip-red" style="top: 38%; left: 36%;">
+                            <span class="blip-dot"></span>
+                            <span class="blip-pulse"></span>
+                        </div>
+                        <div class="radar-blip blip-orange" style="top: 54%; left: 68%;">
+                            <span class="blip-dot"></span>
+                            <span class="blip-pulse"></span>
+                        </div>
+                        <div class="radar-blip blip-green" style="top: 68%; left: 48%;">
+                            <span class="blip-dot"></span>
+                            <span class="blip-pulse"></span>
+                        </div>
+                    </div>
+
+                    <div class="radar-footer">
+                        <span class="radar-caption">Live Acoustic Stream · Arabian Sea Shelf · 100/500 kHz Dual-Swath (AUV/Towfish)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scroll-down-hint">
+            <span class="scroll-text">Scroll down to explore</span>
+            <div class="scroll-chevron"></div>
+        </div>
+    </div>
+
+    <!-- Main Content Section (Light Ice-Cyan Tint Background) -->
+    <main class="main-content">
+        
+        <!-- Section 1: The problem beneath the surface -->
+        <section class="content-section">
+            <div class="section-header align-left">
+                <h2 class="section-title-large">The problem beneath the surface</h2>
+                <p class="section-description-large">
+                    Abandoned, lost or discarded fishing gear — ghost nets — traps marine life, damages reefs and fouls vessel propellers. Side-scan sonar can map the seafloor, but turning raw acoustic pings into trusted operational intelligence remains difficult. JalVedh must identify man-made hazards, reject natural features, and turn verified anomalies into actionable geotagged reports.
+                </p>
+            </div>
+
+            <div class="problem-cards-grid">
+                <div class="light-card">
+                    <h3>Manual Inspection Burden</h3>
+                    <p>Analysts scrub hours of waterfall imagery per survey line.</p>
+                </div>
+                <div class="light-card">
+                    <h3>Natural False Positives</h3>
+                    <p>Rock outcrops, sand ripples and ridges mimic debris signatures.</p>
+                </div>
+                <div class="light-card">
+                    <h3>Unstructured Detection Output</h3>
+                    <p>Findings rarely become searchable, geotagged JSON or CSV records that teams can share and act on.</p>
+                </div>
+            </div>
+
+            <!-- Target Classification & Look-Alikes Grid (Diagram 1 & Diagram 4) -->
+            <div class="targets-lookalikes-container">
+                <div class="targets-column-box manmade">
+                    <div class="column-badge-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <h3>Man-Made Threat Targets</h3>
+                    </div>
+                    <div class="target-pills-grid">
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Critical Threat</span>
+                            <div class="pill-name">Ghost Net</div>
+                        </div>
+                        <div class="target-pill-card">
+                            <span class="pill-tag">High Hazard</span>
+                            <div class="pill-name">Shipwreck</div>
+                        </div>
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Infrastructure</span>
+                            <div class="pill-name">Pipe</div>
+                        </div>
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Object</span>
+                            <div class="pill-name">Cylinder</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="targets-column-box natural">
+                    <div class="column-badge-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <h3>Natural Seabed Features (False-Positive Filtering)</h3>
+                    </div>
+                    <div class="target-pills-grid">
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Geology</span>
+                            <div class="pill-name">Rock Outcrop</div>
+                        </div>
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Seafloor</span>
+                            <div class="pill-name">Sand Ripples</div>
+                        </div>
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Benthic</span>
+                            <div class="pill-name">Seabed Ridges</div>
+                        </div>
+                        <div class="target-pill-card">
+                            <span class="pill-tag">Benthic</span>
+                            <div class="pill-name">Rough Seabed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Sonar-to-Insight workflow (7-Stage End-to-End Pipeline) -->
+        <section id="workflow" class="content-section">
+            <div class="section-header align-left">
+                <h2 class="section-title-large">Sonar-to-Insight 7-Stage Workflow Pipeline</h2>
+                <p class="section-subtitle">From ocean depths to actionable intelligence, in seven automated stages.</p>
+            </div>
+
+            <div class="workflow-cards-grid">
+                <!-- 01 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21h20M4 17l2-7h12l2 7M12 3v7M8 10l4-4 4 4"/></svg>
+                        </div>
+                        <span class="step-num">01</span>
+                    </div>
+                    <h3>1. Data Acquisition</h3>
+                    <p>Survey Vessel, AUV, and Towfish SSS logs, GNSS/IMU track, and sensor metadata.</p>
+                </div>
+                <!-- 02 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        </div>
+                        <span class="step-num">02</span>
+                    </div>
+                    <h3>2. SONAR-DAPT Preprocessing</h3>
+                    <p>Speckle noise reduction, heave/pitch/roll compensation, TVG normalization, and shadow management.</p>
+                </div>
+                <!-- 03 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/></svg>
+                        </div>
+                        <span class="step-num">03</span>
+                    </div>
+                    <h3>3. Multi-Model AI Engine</h3>
+                    <p>YOLO (Fast Boxes), Faster R-CNN (Accurate), and U-Net (Pixel-Level Net Segmentation).</p>
+                </div>
+                <!-- 04 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <span class="step-num">04</span>
+                    </div>
+                    <h3>4. Confidence & Nature Gate</h3>
+                    <p>Class-wise confidence scoring (0-100%) and automatic seabed clutter filtering.</p>
+                </div>
+                <!-- 05 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                        <span class="step-num">05</span>
+                    </div>
+                    <h3>5. Geospatial Localization</h3>
+                    <p>Sonar ping geometry conversion to Lat/Long coordinates and bounding dimensions ($L \times W$).</p>
+                </div>
+                <!-- 06 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                        </div>
+                        <span class="step-num">06</span>
+                    </div>
+                    <h3>6. Evidence Pack Exporters</h3>
+                    <p>JSON/CSV manifests, GeoJSON map overlays, NMEA Waypoints, KML Dive Plans & Evidence ZIP.</p>
+                </div>
+                <!-- 07 -->
+                <div class="light-card workflow-card">
+                    <div class="card-top-row">
+                        <div class="icon-badge">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <span class="step-num">07</span>
+                    </div>
+                    <h3>7. Field Operations & Divers</h3>
+                    <p>Guiding Retrieval Boats, Clearance Diver Teams, and Stakeholder Decision Support.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: 4 Capabilities Cards -->
+        <section id="capabilities" class="content-section">
+            <div class="section-header align-left">
+                <h2 class="section-title-large">Core platform capabilities</h2>
+                <p class="section-subtitle">Real-time AI detection, acoustic shadow reliability scoring, natural clutter filtering, and survey-scale spatial intelligence.</p>
+            </div>
+
+            <div class="feature-cards-grid">
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+                    </div>
+                    <h3>Real-time detection</h3>
+                    <p>Bounding boxes and mask outlines over the sonar tile, streamed as pings arrive.</p>
+                </div>
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </div>
+                    <h3>Confidence + reliability</h3>
+                    <p>Every anomaly carries a 0–100 confidence and a SURE reliability score.</p>
+                </div>
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.6 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.6 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+                    </div>
+                    <h3>Natural vs artificial</h3>
+                    <p>Nature Gate filters rock outcrops, sand ripples and ridges out of the threat list.</p>
+                </div>
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                    <h3>Survey-scale intelligence</h3>
+                    <p>Searchable, spatially referenced records across entire sonar campaigns.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: AI Engine (MARLIN & SONAR-DAPT) -->
+        <section id="ai-engine" class="content-section">
+            <div class="section-header align-left">
+                <h2 class="section-title-large">MARLIN Neural Engine & SONAR-DAPT Architecture</h2>
+                <p class="section-subtitle">Deep learning models specialized for side-scan sonar segmentation, denoising, and natural clutter filtering.</p>
+            </div>
+
+            <div class="feature-cards-grid">
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/></svg>
+                    </div>
+                    <h3>Multi-Model Pipeline (YOLO + Faster R-CNN + U-Net)</h3>
+                    <p>YOLO (Fast Box Detection), Faster R-CNN (High Accuracy), and U-Net (Pixel-Level Ghost Net Masks) trained on 15,000+ side-scan pings.</p>
+                </div>
+
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    </div>
+                    <h3>SONAR-DAPT Denoising</h3>
+                    <p>Domain-adaptive preprocessing that suppresses acoustic speckle noise, normalizes Time-Varied Gain (TVG), and aligns 100kHz / 500kHz pings.</p>
+                </div>
+
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.6 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.6 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+                    </div>
+                    <h3>Context-Aware Dual Detection</h3>
+                    <p>Context-aware visual reasoning distinguishing "Ghost Net over coral" vs "Ghost Net over sand" to prevent false positives in complex benthic habitats.</p>
+                </div>
+
+                <div class="light-card feature-card">
+                    <div class="icon-badge">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00a8b5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </div>
+                    <h3>OCEAN-LEARN Pipeline</h3>
+                    <p>Active learning feedback loop that incorporates analyst validations to fine-tune edge AI weights without manual re-annotation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Why JalVedh & Stakeholder Ecosystem -->
+        <section id="impact" class="content-section why-section">
+            <div class="why-grid">
+                <div class="why-left">
+                    <h2 class="section-title-large">Why JalVedh & Stakeholder Impact</h2>
+                    <p class="section-description-large">
+                        Conventional sonar suites stop at visualization. JalVedh reasons about what it sees — shadow geometry, ping-level memory, seafloor context — and hands over an actionable decision to MoES/NIOT authorities, marine conservationists, and retrieval teams.
+                    </p>
+                </div>
+
+                <div class="why-right-card">
+                    <ul class="check-list">
+                        <li>
+                            <span class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                            <span>Real-time side-scan analysis with live AI overlay</span>
+                        </li>
+                        <li>
+                            <span class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                            <span>Natural-vs-artificial acoustic-shadow reasoning</span>
+                        </li>
+                        <li>
+                            <span class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                            <span>Dedicated ghost-net / entangled-net detection</span>
+                        </li>
+                        <li>
+                            <span class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                            <span>Confidence, risk and false-positive filtering</span>
+                        </li>
+                        <li>
+                            <span class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                            <span>Field operations loop for diver & retrieval boat deployment</span>
+                        </li>
+                        <li>
+                            <span class="check-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                            <span>Automated geolocation, measurement and reporting</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Stakeholder Ecosystem Grid (Diagram 3) -->
+            <div class="stakeholders-grid">
+                <div class="stakeholder-card">
+                    <div style="color:#00a8b5;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <h4>MoES / NIOT Authorities</h4>
+                    <p>Government compliance, official hazard clearance manifests, and MoES PS26057 benchmark alignment.</p>
+                </div>
+                <div class="stakeholder-card">
+                    <div style="color:#00a8b5;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10z"/><path d="M12 8v4l3 3"/></svg>
+                    </div>
+                    <h4>Marine Conservationists</h4>
+                    <p>Protecting benthic habitats, coral reefs, and marine fauna from ghost nets & toxic debris.</p>
+                </div>
+                <div class="stakeholder-card">
+                    <div style="color:#00a8b5;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21h20M4 17l2-7h12l2 7M12 3v7M8 10l4-4 4 4"/></svg>
+                    </div>
+                    <h4>Survey Operators</h4>
+                    <p>Onboard vessel, AUV, and Towfish operators running real-time edge AI inference.</p>
+                </div>
+                <div class="stakeholder-card">
+                    <div style="color:#00a8b5;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
+                    </div>
+                    <h4>Research Institutions</h4>
+                    <p>Acoustic dataset archives, OCEAN-LEARN retrain metrics, and oceanographic research.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Light Theme Footer -->
+        <footer id="impact" class="light-site-footer">
+            <div class="footer-container">
+                <div class="footer-brand">
+                    <div class="logo-wrapper">
+                        <img src="logo-icon.png" alt="JalVedh Logo" class="nav-logo-img">
+                    </div>
+                    <div class="footer-brand-text">
+                        <span class="footer-brand-name">JalVedh <span class="brand-ai">AI</span></span>
+                        <span class="footer-brand-sub">Sonar to insight · Team Yukti</span>
+                    </div>
+                </div>
+
+                <p class="footer-meta">
+                    JalVedh AI Marine Debris & Anomaly Intelligence Platform · Team Yukti
+                </p>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>
